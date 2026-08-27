@@ -20,9 +20,8 @@ import { useT } from '@/i18n';
 import {
   parseTransactionWithAI,
   parseReceiptWithAI,
-  isGeminiConfigured,
   ParsedTransaction,
-} from '@/services/geminiService';
+} from '@/services/aiService';
 import { generateId } from '@/utils';
 
 const AI_CATEGORY_MAP: Record<string, string> = {
@@ -183,11 +182,6 @@ export default function AddTransactionModal({
       return;
     }
 
-    if (!(await isGeminiConfigured())) {
-      Alert.alert(t('geminiNotConfigured'), t('geminiNotConfiguredMsg'));
-      return;
-    }
-
     setIsLoading(true);
     try {
       applyParsed(await parseTransactionWithAI(aiInput.trim()));
@@ -199,11 +193,6 @@ export default function AddTransactionModal({
   };
 
   const handleOcr = async (source: 'camera' | 'gallery') => {
-    if (!(await isGeminiConfigured())) {
-      Alert.alert(t('geminiNotConfigured'), t('geminiNotConfiguredMsg'));
-      return;
-    }
-
     setIsLoading(true);
     try {
       const options: ImagePicker.ImagePickerOptions = { base64: true, quality: 0.7 };

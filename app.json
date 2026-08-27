@@ -50,6 +50,20 @@
         {
           "photosPermission": "Allow $(PRODUCT_NAME) to access your photos to scan receipts."
         }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 26
+          }
+        }
+      ],
+      [
+        "llama.rn",
+        {
+          "enableOpenCL": true
+        }
       ]
     ],
     "experiments": {
@@ -61,13 +75,11 @@
       "eas": {
         "projectId": "a813dd0a-c2ee-4e88-8e58-bb8d0e8a255e"
       },
-      "EXPO_PUBLIC_FIREBASE_API_KEY": "AIzaSyCQecloU90jNufs1l34l4IG5kl7k_me9pA",
       "EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN": "divine-beanbag-355600.firebaseapp.com",
       "EXPO_PUBLIC_FIREBASE_PROJECT_ID": "divine-beanbag-355600",
       "EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET": "divine-beanbag-355600.firebasestorage.app",
       "EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID": "629482976175",
-      "EXPO_PUBLIC_FIREBASE_APP_ID": "1:629482976175:web:e5522631704d885771355a",
-      "EXPO_PUBLIC_GEMINI_API_KEY": "AQ.Ab8RN6Jle9pYtOO6l64E-oLTziOkWXMcNV0bKAxHhrkA8IutLg"
+      "EXPO_PUBLIC_FIREBASE_APP_ID": "1:629482976175:web:e5522631704d885771355a"
     },
     "owner": "fyudaz"
   }

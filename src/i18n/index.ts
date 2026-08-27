@@ -201,6 +201,38 @@ export const messages: Record<Language, MessageSet> = {
     savingsPercent: 'Persentase Tabungan',
     remainingBalance: 'Sisa Saldo',
     selectDate: 'Pilih Tanggal',
+    aiOnDeviceSection: 'AI On-Device (Gemma 4 E2B Offline)',
+    aiOnDeviceHint:
+      'Jalankan model AI Gemma secara lokal di HP Anda tanpa internet. Cepat, privat, dan hemat kuota.',
+    aiMode: 'Mode Operasi AI',
+    aiModeOnDevice: 'On-Device (Offline)',
+    aiModeCloud: 'Cloud (Gemini)',
+    aiModeAuto: 'Auto (Hybrid)',
+    aiModeHint:
+      'Mode Auto memprioritaskan offline Gemma dan otomatis fallback ke cloud Gemini bila diperlukan.',
+    aiModelStatus: 'Status Model Lokal',
+    aiModelReady: 'Terunduh & Siap Digunakan',
+    aiModelNotDownloaded: 'Belum Diunduh (~1.6 GB)',
+    aiModelDownloading: 'Mengunduh model... {progress}%',
+    aiDownloadModel: 'Unduh Model Gemma (Offline)',
+    aiDownloadingBtn: 'Mengunduh ({progress}%)...',
+    aiDeleteModel: 'Hapus Model Lokal',
+    aiDeleteModelConfirmTitle: 'Hapus Model On-Device',
+    aiDeleteModelConfirmMsg:
+      'Hapus file model Gemma dari penyimpanan HP? Anda perlu mengunduh ulang untuk menggunakan AI offline.',
+    aiCellularWarningTitle: 'Peringatan Jaringan Seluler',
+    aiCellularWarningMsg:
+      'Ukuran file model sekitar 1.6 GB. Anda sedang menggunakan koneksi data seluler. Lanjutkan pengunduhan?',
+    aiHardwareBackend: 'Akselerasi Perangkat',
+    aiCancelDownload: 'Batalkan Unduhan',
+    aiOfflineBadge: 'Offline Gemma',
+    aiCloudBadge: 'Cloud Gemini',
+    aiAutoBadge: 'Auto Hybrid',
+    aiModelNotReadyBanner:
+      'Model On-Device belum diunduh. Buka menu Pengaturan untuk mengunduh model agar AI bisa berjalan offline.',
+    geminiFallbackSection: 'Gemini API Key (Opsional Fallback Cloud)',
+    geminiFallbackHint:
+      'Digunakan saat mode Cloud aktif atau sebagai cadangan otomatis saat mode Auto.',
   },
 
   en: {
@@ -398,6 +430,38 @@ export const messages: Record<Language, MessageSet> = {
     savingsPercent: 'Savings Percentage',
     remainingBalance: 'Remaining Balance',
     selectDate: 'Select Date',
+    aiOnDeviceSection: 'On-Device AI (Gemma 4 E2B Offline)',
+    aiOnDeviceHint:
+      'Run Gemma AI model locally on your device without internet. Fast, private, and zero data cost.',
+    aiMode: 'AI Operating Mode',
+    aiModeOnDevice: 'On-Device (Offline)',
+    aiModeCloud: 'Cloud (Gemini)',
+    aiModeAuto: 'Auto (Hybrid)',
+    aiModeHint:
+      'Auto mode prioritizes offline Gemma and seamlessly falls back to cloud Gemini when needed.',
+    aiModelStatus: 'Local Model Status',
+    aiModelReady: 'Downloaded & Ready to Use',
+    aiModelNotDownloaded: 'Not Downloaded (~1.6 GB)',
+    aiModelDownloading: 'Downloading model... {progress}%',
+    aiDownloadModel: 'Download Gemma Model (Offline)',
+    aiDownloadingBtn: 'Downloading ({progress}%)...',
+    aiDeleteModel: 'Delete Local Model',
+    aiDeleteModelConfirmTitle: 'Delete On-Device Model',
+    aiDeleteModelConfirmMsg:
+      'Delete Gemma model file from device storage? You will need to re-download it to use offline AI features.',
+    aiCellularWarningTitle: 'Cellular Network Warning',
+    aiCellularWarningMsg:
+      'Model file size is approx. 1.6 GB. You are currently on cellular data. Proceed with download?',
+    aiHardwareBackend: 'Hardware Acceleration',
+    aiCancelDownload: 'Cancel Download',
+    aiOfflineBadge: 'Offline Gemma',
+    aiCloudBadge: 'Cloud Gemini',
+    aiAutoBadge: 'Auto Hybrid',
+    aiModelNotReadyBanner:
+      'On-Device model not downloaded yet. Open Settings to download the model for offline AI.',
+    geminiFallbackSection: 'Gemini API Key (Optional Cloud Fallback)',
+    geminiFallbackHint:
+      'Used when Cloud mode is active or as an automatic backup in Auto Hybrid mode.',
   },
 };
 

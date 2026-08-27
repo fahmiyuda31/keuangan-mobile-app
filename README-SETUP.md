@@ -25,10 +25,12 @@ keuangan-mobile-app/
 │   ├── navigation/               # React Navigation config (manual, not expo-router routing)
 │   ├── screens/                  # dashboard/, transactions/, categories/, budgets/, Settings
 │   ├── services/
-│   │   ├── dbService.ts          # SQLite CRUD (expo-sqlite) - the active DB layer
-│   │   ├── geminiService.ts      # AI transaction parsing (Gemini)
+│   │   ├── aiService.ts          # Hybrid AI Router (On-Device + Cloud fallback)
+│   │   ├── onDeviceAiService.ts  # On-Device Gemma 4 E2B offline engine (llama.rn)
+│   │   ├── geminiService.ts      # Cloud AI transaction parsing & chat (Gemini)
 │   │   ├── keyService.ts         # Gemini key lookup (SecureStore -> .env fallback)
-│   ├── store/                    # Zustand stores (in-memory, hydrate from dbService)
+│   │   ├── dbService.ts          # SQLite CRUD (expo-sqlite) - the active DB layer
+│   ├── store/                    # Zustand stores (transactionStore, categoryStore, budgetStore, modelStore)
 │   ├── utils/                    # Utility functions
 │   └── constants/                # App constants
 ├── assets/
