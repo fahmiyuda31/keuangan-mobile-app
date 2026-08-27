@@ -1,4 +1,5 @@
 # Product Requirements Document (PRD)
+
 ## Keuangan Mobile App
 
 **Document Version:** 2.0
@@ -14,6 +15,7 @@
 Aplikasi finansial **standalone, offline-first** di iOS dan Android. Semua data tersimpan lokal di SQLite. Backup opsional ke Firebase Cloud (Firestore) dengan auth email/password. Tanpa server API milik sendiri.
 
 ### Key Points
+
 - **Mobile only**: iOS & Android
 - **Data lokal**: SQLite (`expo-sqlite`), file `keuangan.db` — bukan Realm, tanpa encryption (encryption di luar scope managed workflow)
 - **AI Engine (Hybrid)**: On-Device Gemma 4 E2B (`llama.rn` offline engine) sebagai default lokal + Gemini API sebagai cloud fallback untuk OCR & analisis tambahan
@@ -31,10 +33,12 @@ Aplikasi finansial **standalone, offline-first** di iOS dan Android. Semua data 
 ### Implemented (MVP)
 
 #### Dashboard
+
 - Ringkasan saldo, income, expense
 - Transaksi terbaru
 
 #### Transaction Management
+
 - Tambah transaksi manual (form: amount, description, type, category, date picker, notes)
 - Tambah via AI text parsing (`parseTransactionWithAI`)
 - Tambah via OCR foto struk (`parseReceiptWithAI`, kamera/gallery)
@@ -42,30 +46,36 @@ Aplikasi finansial **standalone, offline-first** di iOS dan Android. Semua data 
 - Filter helper di store: by category, by date range (sudah ada, belum dipakai UI)
 
 #### Categories
+
 - Default categories di-seed otomatis saat first launch (income: Gaji, Bonus, Investasi, Lainnya; expense: Makanan, Transportasi, Hiburan, Utilitas, Kesehatan, Pendidikan, Belanja, Lainnya)
 - CRUD lengkap (list, tambah, edit, hapus)
 
 #### Budgets
+
 - Set budget per kategori (period: daily/weekly/monthly/yearly)
 - CRUD lengkap (list, tambah, edit, hapus)
 
 #### Dashboard
+
 - Ringkasan saldo, income, expense
 - Transaksi terbaru
 - Chart pengeluaran per kategori (`react-native-chart-kit` PieChart)
 
 #### Settings
+
 - Preferensi aplikasi: tema (Light/Dark/System), bahasa (id/en)
 - **Gemini API Key** (save / clear, disimpan di expo-secure-store)
 - **Export Data**: CSV & PDF
 - **Cloud Backup** (Firebase): status login, tombol Backup ke Cloud & Restore dari Cloud, Logout (login/register lewat screen AuthScreen)
 
 #### Authentication (login gate)
+
 - `src/screens/AuthScreen.tsx`: form email/password (Masuk/Daftar), tampil sebelum app kalau belum login
 - Session persist via `@react-native-async-storage/async-storage` - setelah login sekali, buka app langsung masuk (offline aman)
 - Kalau Firebase belum dikonfigurasi (`.env` kosong) atau platform web: gate di-skip (app langsung terbuka)
 
 #### Navigation & UI
+
 - Bottom tab: Dashboard  Transactions  Categories  Budgets  Settings
 - `StyleSheet` (tanpa NativeWind), brand color primary `#208AEF`
 - `SafeAreaView` dari `react-native-safe-area-context`
@@ -87,12 +97,15 @@ Aplikasi finansial **standalone, offline-first** di iOS dan Android. Semua data 
 ## Data Model (SQLite)
 
 ### "Transaction" (quoted — reserved keyword)
+
 `id` TEXT PK, `amount` REAL, `description` TEXT, `category` TEXT, `type` TEXT ('income'|'expense'), `date` TEXT, `notes` TEXT NULL, `createdAt` TEXT, `updatedAt` TEXT
 
 ### Category
+
 `id` TEXT PK, `name` TEXT, `color` TEXT, `icon` TEXT, `type` TEXT, `createdAt` TEXT, `updatedAt` TEXT
 
 ### Budget
+
 `id` TEXT PK, `category` TEXT, `amount` REAL, `period` TEXT, `startDate` TEXT, `endDate` TEXT NULL, `createdAt` TEXT, `updatedAt` TEXT
 
 ---
@@ -126,6 +139,7 @@ Lihat `GEMINI-INTEGRATION-GUIDE.md` untuk detail.
 - **Dev build wajib**: expo-sqlite, expo-secure-store, expo-camera, expo-image-picker native module → Expo Go tidak jalan (Firebase JS SDK tidak butuh dev build)
 - **Startup**: init DB + migrasi + seed categories + load stores di `app/index.tsx` `useEffect`
 - **Code quality**: `npm run lint`, `npm run type-check`, `npm run format:check` sebelum selesai; `npm test` (jest-expo, 5 suite)
+
 ---
 
 **Last Updated**: 2026-08-05

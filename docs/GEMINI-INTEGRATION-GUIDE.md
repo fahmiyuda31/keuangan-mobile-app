@@ -1,4 +1,5 @@
 # AI Integration Guide (Hybrid: On-Device Gemma 4 E2B & Gemini Cloud)
+
 ## Keuangan Mobile App - Smart Financial Assistant & Parsing
 
 **Version**: 3.0
@@ -10,6 +11,7 @@
 ## AI Architecture Overview
 
 Fitur AI menggunakan layer **Hybrid Router (`src/services/aiService.ts`)** yang menyatukan:
+
 1. **On-Device Offline AI (`src/services/onDeviceAiService.ts`)**: Menjalankan model quantized GGUF Gemma 4 E2B secara lokal menggunakan binding `llama.rn` (llama.cpp) dengan akselerasi OpenCL / GPU / CPU.
 2. **Cloud AI Fallback (`src/services/geminiService.ts`)**: Memanggil Gemini API secara langsung via REST API (tanpa SDK eksternal) untuk OCR kualitas tinggi dan fallback bila model lokal belum diunduh.
 
@@ -65,13 +67,13 @@ Settings screen → **AI / Gemini API Key**:
 
 ## Error handling
 
-| Situation | Result |
-|-----------|--------|
-| No key in SecureStore or `.env` | `Gemini API key is not configured...` |
-| Invalid key | HTTP 400 `API_KEY_INVALID` (logged as `Gemini API error: ...`) |
-| Model returns non-JSON | `Could not parse AI response into a transaction.` |
-| Model returns invalid shape | `AI returned an invalid transaction format.` |
-| HTTP non-2xx | `Gemini API request failed: <status>` |
+| Situation                       | Result                                                         |
+| ------------------------------- | -------------------------------------------------------------- |
+| No key in SecureStore or `.env` | `Gemini API key is not configured...`                          |
+| Invalid key                     | HTTP 400 `API_KEY_INVALID` (logged as `Gemini API error: ...`) |
+| Model returns non-JSON          | `Could not parse AI response into a transaction.`              |
+| Model returns invalid shape     | `AI returned an invalid transaction format.`                   |
+| HTTP non-2xx                    | `Gemini API request failed: <status>`                          |
 
 There is no automatic retry.
 

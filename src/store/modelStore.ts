@@ -1,16 +1,16 @@
-import { create } from 'zustand';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
-  checkModelExists,
-  downloadOnDeviceModel,
-  cancelModelDownload,
-  deleteOnDeviceModel,
-  initOnDeviceModel,
-  releaseOnDeviceModel,
-  getOnDeviceModelPath,
-  getOnDeviceModelSize,
-  getHardwareBackendInfo,
+    cancelModelDownload,
+    checkModelExists,
+    deleteOnDeviceModel,
+    downloadOnDeviceModel,
+    getHardwareBackendInfo,
+    getOnDeviceModelPath,
+    getOnDeviceModelSize,
+    initOnDeviceModel,
+    releaseOnDeviceModel,
 } from '@/services/onDeviceAiService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { create } from 'zustand';
 
 export type AiMode = 'on-device' | 'cloud' | 'auto';
 export type ModelStatus = 'idle' | 'checking' | 'downloading' | 'ready' | 'error';
@@ -203,3 +203,4 @@ export const useModelStore = create<ModelStoreState>((set, get) => ({
     }
   },
 }));
+

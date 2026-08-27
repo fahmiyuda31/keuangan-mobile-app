@@ -1,7 +1,7 @@
+import type { LlamaContext } from 'llama.rn';
 import { Platform } from 'react-native';
 import RNFS from 'react-native-fs';
-import type { LlamaContext } from 'llama.rn';
-import { ParsedTransaction, GeminiImage, ChatMessage } from './geminiService';
+import { ChatMessage, GeminiImage, ParsedTransaction } from './geminiService';
 
 const DEFAULT_CATEGORIES = [
   'Food',
@@ -177,9 +177,7 @@ export async function initOnDeviceModel(): Promise<LlamaContext> {
   const { initLlama } = require('llama.rn');
 
   try {
-    const cleanPath = modelPath.startsWith('file://')
-      ? modelPath.replace('file://', '')
-      : modelPath;
+    const cleanPath = modelPath.startsWith('file://') ? modelPath.replace('file://', '') : modelPath;
 
     const ctx = await initLlama({
       model: cleanPath,

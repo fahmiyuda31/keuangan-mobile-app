@@ -62,16 +62,19 @@ keuangan-mobile-app/
 ### Setup Steps
 
 1. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 2. **Setup environment variables** (optional — only needed as fallback key)
+
    ```bash
    cp .env.example .env
    ```
 
 3. **Prebuild (required — expo-sqlite/expo-secure-store are native modules, Expo Go won't work)**
+
    ```bash
    npm run prebuild
    ```
@@ -136,6 +139,7 @@ Gotchas:
 ### Navigation
 
 React Navigation, manually composed in `src/navigation/`:
+
 - `RootNavigator` (native stack) → `BottomTabNavigator` (5 tabs)
 - Typed param lists in `src/navigation/types.ts`
 
