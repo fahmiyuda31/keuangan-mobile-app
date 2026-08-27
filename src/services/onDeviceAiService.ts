@@ -175,26 +175,54 @@ export async function initOnDeviceModel(): Promise<LlamaContext> {
   }
 
   const modelPath = await getOnDeviceModelPath();
+  const cleanPath = modelPath.replace(/^file:\/\//, '');
 
+  let initLlama: any;
   try {
-    const { initLlama } = require('llama.rn');
-    const cleanPath = modelPath.startsWith('file://')
-      ? modelPath.replace('file://', '')
-      : modelPath;
+    const llamaModule = require('llama.rn');
+    initLlama = llamaModule?.initLlama;
+    if (typeof initLlama !== 'function') {
+      throw new Error('initLlama function is not exported by llama.rn');
+    }
+  } catch (err: any) {
+    throw new Error(
+      `Modul native llama.rn belum terpasang di binary APK saat ini (${err.message || err}). Silakan rebuild aplikasi menggunakan: npx expo run:android`
+    );
+  }
 
+  // 1. Try GPU acceleration (OpenCL on Android, Metal on iOS)
+  try {
     const ctx = await initLlama({
       model: cleanPath,
       n_ctx: 2048,
       n_gpu_layers: Platform.OS === 'android' ? 99 : 99,
-      use_mlock: true,
+      use_mlock: false,
+      use_mmap: true,
       n_threads: 4,
     });
-
     llamaContextInstance = ctx;
     return ctx;
-  } catch (err: any) {
-    console.error('Failed to initialize Llama context:', err);
-    throw new Error(`Inisialisasi engine on-device gagal: ${err.message || err}`);
+  } catch (gpuError: any) {
+    console.warn('GPU model initialization failed, attempting fallback to CPU:', gpuError);
+  }
+
+  // 2. Fallback to CPU inference
+  try {
+    const ctx = await initLlama({
+      model: cleanPath,
+      n_ctx: 1024,
+      n_gpu_layers: 0,
+      use_mlock: false,
+      use_mmap: true,
+      n_threads: 4,
+    });
+    llamaContextInstance = ctx;
+    return ctx;
+  } catch (cpuError: any) {
+    console.error('CPU model initialization failed:', cpuError);
+    throw new Error(
+      `Inisialisasi engine on-device gagal (${cpuError.message || cpuError}). Pastikan memori RAM cukup untuk model 2B.`
+    );
   }
 }
 
