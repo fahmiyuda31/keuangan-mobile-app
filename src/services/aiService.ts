@@ -1,19 +1,19 @@
 import { AiMode, useModelStore } from '@/store/modelStore';
 import {
-    ChatMessage,
-    chatWithFinancialAI as chatWithFinancialCloud,
-    GeminiImage,
-    isGeminiConfigured,
-    ParsedTransaction,
-    parseReceiptWithAI as parseReceiptCloud,
-    parseTransactionWithAI as parseTransactionCloud,
+  ChatMessage,
+  chatWithFinancialAI as chatWithFinancialCloud,
+  GeminiImage,
+  isGeminiConfigured,
+  ParsedTransaction,
+  parseReceiptWithAI as parseReceiptCloud,
+  parseTransactionWithAI as parseTransactionCloud,
 } from './geminiService';
 import {
-    chatWithOnDeviceAI,
-    checkModelExists,
-    parseReceiptWithOnDeviceAI,
-    parseTransactionWithOnDeviceAI,
-    releaseOnDeviceModel,
+  chatWithOnDeviceAI,
+  checkModelExists,
+  parseReceiptWithOnDeviceAI,
+  parseTransactionWithOnDeviceAI,
+  releaseOnDeviceModel,
 } from './onDeviceAiService';
 
 export interface AIStatus {
@@ -143,9 +143,7 @@ export async function parseReceiptWithAI(image: GeminiImage): Promise<ParsedTran
     return parseReceiptWithOnDeviceAI(image);
   }
 
-  throw new Error(
-    'OCR Struk membutuhkan Gemini API Key (Cloud) atau Vision Model yang terpasang.'
-  );
+  throw new Error('OCR Struk membutuhkan Gemini API Key (Cloud) atau Vision Model yang terpasang.');
 }
 
 /**
@@ -204,4 +202,3 @@ export async function releaseAISession(): Promise<void> {
 }
 
 export type { ChatMessage, GeminiImage, ParsedTransaction };
-

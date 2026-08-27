@@ -1,7 +1,7 @@
-import type { LlamaContext } from 'llama.rn';
 import { Platform } from 'react-native';
-import RNFS from 'react-native-fs';
-import { ChatMessage, GeminiImage, ParsedTransaction } from './geminiService';
+import * as FileSystem from 'expo-file-system/legacy';
+import type { LlamaContext } from 'llama.rn';
+import { ParsedTransaction, GeminiImage, ChatMessage } from './geminiService';
 
 const DEFAULT_CATEGORIES = [
   'Food',
@@ -15,7 +15,7 @@ const DEFAULT_CATEGORIES = [
   'Other',
 ];
 
-const MODEL_DIR = `${RNFS.DocumentDirectoryPath || ''}/models/`;
+const MODEL_DIR = `${FileSystem.documentDirectory || ''}models/`;
 const DEFAULT_MODEL_FILENAME =
   process.env.EXPO_PUBLIC_HF_MODEL_FILENAME || 'gemma-2-2b-it-Q4_K_M.gguf';
 const DEFAULT_MODEL_URL =
@@ -23,7 +23,7 @@ const DEFAULT_MODEL_URL =
   'https://huggingface.co/bartowski/gemma-2-2b-it-GGUF/resolve/main/gemma-2-2b-it-Q4_K_M.gguf';
 
 let llamaContextInstance: LlamaContext | null = null;
-let currentDownloadJobId: number | null = null;
+let currentDownloadResumable: FileSystem.DownloadResumable | null = null;
 
 /**
  * Get full path to local model GGUF file
@@ -36,13 +36,11 @@ export async function getOnDeviceModelPath(): Promise<string> {
  * Check if the on-device GGUF model exists locally
  */
 export async function checkModelExists(): Promise<boolean> {
-  if (Platform.OS === 'web' || !RNFS.DocumentDirectoryPath) return false;
+  if (Platform.OS === 'web' || !FileSystem.documentDirectory) return false;
   try {
     const modelPath = await getOnDeviceModelPath();
-    const exists = await RNFS.exists(modelPath);
-    if (!exists) return false;
-    const stat = await RNFS.stat(modelPath);
-    return stat.size > 1024 * 1024; // > 1MB check
+    const info = await FileSystem.getInfoAsync(modelPath);
+    return !!(info.exists && info.size && info.size > 1024 * 1024); // > 1MB check
   } catch (err) {
     console.warn('Error checking model existence:', err);
     return false;
@@ -53,13 +51,12 @@ export async function checkModelExists(): Promise<boolean> {
  * Get formatted file size of the downloaded model
  */
 export async function getOnDeviceModelSize(): Promise<string | null> {
-  if (Platform.OS === 'web' || !RNFS.DocumentDirectoryPath) return null;
+  if (Platform.OS === 'web' || !FileSystem.documentDirectory) return null;
   try {
     const modelPath = await getOnDeviceModelPath();
-    const exists = await RNFS.exists(modelPath);
-    if (!exists) return null;
-    const stat = await RNFS.stat(modelPath);
-    const sizeMB = stat.size / (1024 * 1024);
+    const info = await FileSystem.getInfoAsync(modelPath);
+    if (!info.exists || !info.size) return null;
+    const sizeMB = info.size / (1024 * 1024);
     if (sizeMB >= 1024) {
       return `${(sizeMB / 1024).toFixed(2)} GB`;
     }
@@ -75,50 +72,54 @@ export async function getOnDeviceModelSize(): Promise<string | null> {
 export async function downloadOnDeviceModel(
   onProgress?: (progressRatio: number, bytesWritten: number, totalBytes: number) => void
 ): Promise<string> {
-  if (Platform.OS === 'web' || !RNFS.DocumentDirectoryPath) {
+  if (Platform.OS === 'web' || !FileSystem.documentDirectory) {
     throw new Error('On-device AI model is not supported on Web.');
   }
 
   // Ensure directory exists
-  const dirExists = await RNFS.exists(MODEL_DIR);
-  if (!dirExists) {
-    await RNFS.mkdir(MODEL_DIR);
+  const dirInfo = await FileSystem.getInfoAsync(MODEL_DIR);
+  if (!dirInfo.exists) {
+    await FileSystem.makeDirectoryAsync(MODEL_DIR, { intermediates: true });
   }
 
   const modelPath = await getOnDeviceModelPath();
 
-  const downloadResult = RNFS.downloadFile({
-    fromUrl: DEFAULT_MODEL_URL,
-    toFile: modelPath,
-    progressInterval: 250,
-    progressDivider: 1,
-    progress: (res) => {
-      const progress = res.contentLength > 0 ? res.bytesWritten / res.contentLength : 0;
+  currentDownloadResumable = FileSystem.createDownloadResumable(
+    DEFAULT_MODEL_URL,
+    modelPath,
+    {},
+    (downloadProgress) => {
+      const progress =
+        downloadProgress.totalBytesExpectedToWrite > 0
+          ? downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite
+          : 0;
       if (onProgress) {
-        onProgress(progress, res.bytesWritten, res.contentLength);
+        onProgress(
+          progress,
+          downloadProgress.totalBytesWritten,
+          downloadProgress.totalBytesExpectedToWrite
+        );
       }
-    },
-  });
+    }
+  );
 
-  currentDownloadJobId = downloadResult.jobId;
+  const result = await currentDownloadResumable.downloadAsync();
+  currentDownloadResumable = null;
 
-  const result = await downloadResult.promise;
-  currentDownloadJobId = null;
-
-  if (result.statusCode !== 200) {
-    throw new Error(`Download failed with HTTP status ${result.statusCode}`);
+  if (!result || !result.uri) {
+    throw new Error('Download failed: file not written.');
   }
 
-  return modelPath;
+  return result.uri;
 }
 
 /**
  * Cancel ongoing model download
  */
 export async function cancelModelDownload(): Promise<void> {
-  if (currentDownloadJobId !== null) {
-    RNFS.stopDownload(currentDownloadJobId);
-    currentDownloadJobId = null;
+  if (currentDownloadResumable) {
+    await currentDownloadResumable.cancelAsync();
+    currentDownloadResumable = null;
     throw new Error('DOWNLOAD_CANCELLED');
   }
 }
@@ -128,11 +129,11 @@ export async function cancelModelDownload(): Promise<void> {
  */
 export async function deleteOnDeviceModel(): Promise<void> {
   await releaseOnDeviceModel();
-  if (Platform.OS === 'web' || !RNFS.DocumentDirectoryPath) return;
+  if (Platform.OS === 'web' || !FileSystem.documentDirectory) return;
   const modelPath = await getOnDeviceModelPath();
-  const exists = await RNFS.exists(modelPath);
-  if (exists) {
-    await RNFS.unlink(modelPath);
+  const info = await FileSystem.getInfoAsync(modelPath);
+  if (info.exists) {
+    await FileSystem.deleteAsync(modelPath, { idempotent: true });
   }
 }
 
@@ -174,10 +175,12 @@ export async function initOnDeviceModel(): Promise<LlamaContext> {
   }
 
   const modelPath = await getOnDeviceModelPath();
-  const { initLlama } = require('llama.rn');
 
   try {
-    const cleanPath = modelPath.startsWith('file://') ? modelPath.replace('file://', '') : modelPath;
+    const { initLlama } = require('llama.rn');
+    const cleanPath = modelPath.startsWith('file://')
+      ? modelPath.replace('file://', '')
+      : modelPath;
 
     const ctx = await initLlama({
       model: cleanPath,
