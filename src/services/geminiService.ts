@@ -177,7 +177,11 @@ Petunjuk:
     },
     {
       role: 'model',
-      parts: [{ text: 'Halo! Saya siap membantu Anda menganalisis kondisi keuangan dan memberikan saran terbaik berdasarkan data transaksi Anda. Ada yang ingin Anda tanyakan?' }],
+      parts: [
+        {
+          text: 'Halo! Saya siap membantu Anda menganalisis kondisi keuangan dan memberikan saran terbaik berdasarkan data transaksi Anda. Ada yang ingin Anda tanyakan?',
+        },
+      ],
     },
     ...history.map((msg) => ({
       role: msg.role === 'user' ? 'user' : 'model',
@@ -223,4 +227,3 @@ Petunjuk:
 export async function isGeminiConfigured(): Promise<boolean> {
   return !!(await getGeminiKey());
 }
-

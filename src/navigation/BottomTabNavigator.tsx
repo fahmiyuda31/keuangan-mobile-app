@@ -135,7 +135,6 @@ export function BottomTabNavigator() {
   );
 }
 
-
 const styles = StyleSheet.create({
   iconPill: {
     width: 40,

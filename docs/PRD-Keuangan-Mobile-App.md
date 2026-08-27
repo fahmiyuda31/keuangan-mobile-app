@@ -16,12 +16,13 @@ Aplikasi finansial **standalone, offline-first** di iOS dan Android. Semua data 
 ### Key Points
 - **Mobile only**: iOS & Android
 - **Data lokal**: SQLite (`expo-sqlite`), file `keuangan.db` — bukan Realm, tanpa encryption (encryption di luar scope managed workflow)
-- **AI input**: Gemini API untuk parsing teks transaksi & OCR foto struk (client-side `fetch`) — voice input TIDAK diimplementasikan
-- **Key management**: API key bisa diisi via Settings (expo-secure-store) dengan fallback `.env`
-- **Cloud backup**: Firebase (Firestore + Auth email/password, JS SDK v12) - backup/restore manual dari Settings, tanpa native module (jalan di Expo Go)
+- **AI Engine (Hybrid)**: On-Device Gemma 4 E2B (`llama.rn` offline engine) sebagai default lokal + Gemini API sebagai cloud fallback untuk OCR & analisis tambahan
+- **Model Management**: Download, cancel, delete model GGUF (~1.6 GB) langsung dari menu Settings dengan deteksi jaringan seluler
+- **Key management**: Gemini API key opsional untuk cloud fallback diisi via Settings (expo-secure-store) dengan fallback `.env`
+- **Cloud backup**: Firebase (Firestore + Auth email/password, JS SDK v12) - backup/restore manual dari Settings
 - **Login gate**: app dikunci balik login email/password (`src/screens/AuthScreen.tsx`) - hanya user terautentikasi yang bisa akses data; sesi persist via async-storage (offline tetap jalan setelah login pertama)
-- **Offline-first**: bekerja tanpa internet (cloud hanya mirror saat backup/restore manual)
-- **Export CSV/PDF**: diimplementasikan (expo-file-system + expo-print + expo-sharing, native-only)
+- **Offline-first**: bekerja 100% tanpa internet termasuk fitur AI Assistant & AI Parser saat model lokal telah diunduh
+- **Export CSV/PDF & Local Backup**: diimplementasikan (expo-file-system + expo-print + expo-sharing)
 
 ---
 

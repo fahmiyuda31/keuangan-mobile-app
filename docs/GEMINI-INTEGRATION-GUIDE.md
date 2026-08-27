@@ -1,33 +1,27 @@
-# Gemini AI Integration Guide
-## Keuangan Mobile App - AI Transaction Parsing
+# AI Integration Guide (Hybrid: On-Device Gemma 4 E2B & Gemini Cloud)
+## Keuangan Mobile App - Smart Financial Assistant & Parsing
 
-**Version**: 2.0
-**Date**: 2026-08-05
-**Scope**: Natural-language transaction parsing (text input only). Receipt OCR / voice input are NOT implemented.
+**Version**: 3.0
+**Date**: 2026-08-27
+**Scope**: Natural-language transaction parsing, Receipt OCR, and Financial Assistant Chat with Hybrid Routing (Offline On-Device Gemma 4 E2B + Gemini Cloud Fallback).
 
 ---
 
-## What the code actually does
+## AI Architecture Overview
 
-`src/services/geminiService.ts` exports:
-
-```typescript
-parseTransactionWithAI(input: string): Promise<ParsedTransaction>
-isGeminiConfigured(): Promise<boolean>
-```
-
-`parseTransactionWithAI` parses free text (e.g. `"beli makan siang 25rb"`) into a structured transaction:
+Fitur AI menggunakan layer **Hybrid Router (`src/services/aiService.ts`)** yang menyatukan:
+1. **On-Device Offline AI (`src/services/onDeviceAiService.ts`)**: Menjalankan model quantized GGUF Gemma 4 E2B secara lokal menggunakan binding `llama.rn` (llama.cpp) dengan akselerasi OpenCL / GPU / CPU.
+2. **Cloud AI Fallback (`src/services/geminiService.ts`)**: Memanggil Gemini API secara langsung via REST API (tanpa SDK eksternal) untuk OCR kualitas tinggi dan fallback bila model lokal belum diunduh.
 
 ```typescript
-interface ParsedTransaction {
-  amount: number;                 // positive number, IDR
-  description: string;
-  category: string;               // from DEFAULT_CATEGORIES
-  type: 'income' | 'expense';
-}
+// Single entry point across UI screens
+import {
+  parseTransactionWithAI,
+  parseReceiptWithAI,
+  chatWithFinancialAI,
+  getAIStatus,
+} from '@/services/aiService';
 ```
-
-Gemini is called with plain `fetch` to `generativelanguage.googleapis.com` — no SDK (`@google/generative-ai` is NOT installed). There is no image/audio input, no 9router, no `retryWithBackoff`, no `validateApiKey`.
 
 ---
 

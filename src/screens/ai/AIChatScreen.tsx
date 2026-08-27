@@ -15,7 +15,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/use-theme';
 import { useT } from '@/i18n';
-import { chatWithFinancialAI, ChatMessage, isGeminiConfigured } from '@/services/geminiService';
+import {
+  chatWithFinancialAI,
+  ChatMessage,
+  getAIStatus,
+  releaseAISession,
+  AIStatus,
+} from '@/services/aiService';
 import { getFinancialSummaryContext } from '@/services/dbService';
 
 export default function AIChatScreen() {
@@ -26,44 +32,78 @@ export default function AIChatScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [loading, setLoading] = useState(false);
-  const [hasKey, setHasKey] = useState<boolean | null>(null);
+  const [aiStatus, setAiStatus] = useState<AIStatus | null>(null);
 
   const flatListRef = useRef<FlatList>(null);
 
   useEffect(() => {
-    checkKey();
+    checkStatus();
+    return () => {
+      releaseAISession();
+    };
   }, []);
 
-  const checkKey = async () => {
-    const configured = await isGeminiConfigured();
-    setHasKey(configured);
+  const checkStatus = async () => {
+    try {
+      const status = await getAIStatus();
+      setAiStatus(status);
+    } catch (err) {
+      console.warn('Failed to check AI status:', err);
+    }
   };
 
   const handleSend = async (customText?: string) => {
     const textToSend = customText || inputText.trim();
     if (!textToSend || loading) return;
 
-    if (!hasKey) {
-      Alert.alert(t('geminiNotConfigured'), t('geminiNotConfiguredMsg'));
+    const currentStatus = aiStatus || (await getAIStatus());
+    setAiStatus(currentStatus);
+
+    if (!currentStatus.available) {
+      Alert.alert(t('aiError'), t('aiModelNotReadyBanner'));
       return;
     }
 
     const userMsg: ChatMessage = { role: 'user', content: textToSend };
     const updatedHistory = [...messages, userMsg];
 
-    setMessages(updatedHistory);
+    // Optimistically add user message and empty model message for streaming
+    setMessages([...updatedHistory, { role: 'model', content: '' }]);
     if (!customText) setInputText('');
     setLoading(true);
 
     try {
-      // Ambil data transaksi terkini secara otomatis dari SQLite
+      // Ambil data transaksi terkini dari SQLite
       const financialContext = await getFinancialSummaryContext();
 
-      // Kirim riwayat pesan beserta konteks keuangan terkini ke Gemini API
-      const replyContent = await chatWithFinancialAI(updatedHistory, financialContext);
-      const aiMsg: ChatMessage = { role: 'model', content: replyContent };
-      setMessages((prev) => [...prev, aiMsg]);
+      // Kirim riwayat pesan ke hybrid aiService dengan streaming callback
+      const replyContent = await chatWithFinancialAI(
+        updatedHistory,
+        financialContext,
+        (partialText) => {
+          setMessages((prev) => {
+            const copy = [...prev];
+            if (copy.length > 0 && copy[copy.length - 1].role === 'model') {
+              copy[copy.length - 1] = { role: 'model', content: partialText };
+            }
+            return copy;
+          });
+        }
+      );
+
+      // Final update
+      setMessages((prev) => {
+        const copy = [...prev];
+        if (copy.length > 0 && copy[copy.length - 1].role === 'model') {
+          copy[copy.length - 1] = { role: 'model', content: replyContent };
+        } else {
+          copy.push({ role: 'model', content: replyContent });
+        }
+        return copy;
+      });
     } catch (err: any) {
+      // Rollback placeholder if failed
+      setMessages(updatedHistory);
       Alert.alert(t('aiError'), err.message || t('aiChatError'));
     } finally {
       setLoading(false);
@@ -74,11 +114,7 @@ export default function AIChatScreen() {
     setMessages([]);
   };
 
-  const quickPrompts = [
-    t('aiChatQuick1'),
-    t('aiChatQuick2'),
-    t('aiChatQuick3'),
-  ];
+  const quickPrompts = [t('aiChatQuick1'), t('aiChatQuick2'), t('aiChatQuick3')];
 
   const renderFormattedText = (content: string, textColor: string) => {
     // Parser sederhana untuk markdown dasar: heading (#, ##, ###), bold (**text**), bullet points (* / -)
@@ -102,7 +138,15 @@ export default function AIChatScreen() {
       const parts = trimmed.split(/(\*\*.*?\*\*)/g);
 
       return (
-        <View key={idx} style={{ flexDirection: 'row', flexWrap: 'wrap', marginTop: isHeader ? 6 : 2, marginBottom: isHeader ? 4 : 0 }}>
+        <View
+          key={idx}
+          style={{
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            marginTop: isHeader ? 6 : 2,
+            marginBottom: isHeader ? 4 : 0,
+          }}
+        >
           {isBullet && (
             <Text style={[{ color: textColor, fontWeight: '700', marginRight: 6 }]}>•</Text>
           )}
@@ -168,22 +212,72 @@ export default function AIChatScreen() {
     );
   };
 
-
   return (
     <KeyboardAvoidingView
       style={[styles.container, { backgroundColor: colors.screen }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
-
       {/* Header */}
-      <View style={[styles.header, { paddingTop: insets.top + 12, borderBottomColor: colors.border }]}>
+      <View
+        style={[styles.header, { paddingTop: insets.top + 12, borderBottomColor: colors.border }]}
+      >
         <View style={styles.headerTitleRow}>
           <View style={[styles.headerIcon, { backgroundColor: `${colors.primary}15` }]}>
             <Ionicons name="sparkles" size={20} color={colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.headerTitle, { color: colors.text }]}>{t('aiChatTitle')}</Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <Text style={[styles.headerTitle, { color: colors.text }]}>{t('aiChatTitle')}</Text>
+              {aiStatus && (
+                <View
+                  style={[
+                    styles.badge,
+                    {
+                      backgroundColor:
+                        aiStatus.activeBackend === 'on-device'
+                          ? '#e8f5e9'
+                          : aiStatus.activeBackend === 'cloud'
+                            ? '#e3f2fd'
+                            : '#fff3cd',
+                    },
+                  ]}
+                >
+                  <View
+                    style={[
+                      styles.badgeDot,
+                      {
+                        backgroundColor:
+                          aiStatus.activeBackend === 'on-device'
+                            ? '#2e7d32'
+                            : aiStatus.activeBackend === 'cloud'
+                              ? '#1565c0'
+                              : '#f57f17',
+                      },
+                    ]}
+                  />
+                  <Text
+                    style={[
+                      styles.badgeText,
+                      {
+                        color:
+                          aiStatus.activeBackend === 'on-device'
+                            ? '#2e7d32'
+                            : aiStatus.activeBackend === 'cloud'
+                              ? '#1565c0'
+                              : '#f57f17',
+                      },
+                    ]}
+                  >
+                    {aiStatus.activeBackend === 'on-device'
+                      ? t('aiOfflineBadge')
+                      : aiStatus.activeBackend === 'cloud'
+                        ? t('aiCloudBadge')
+                        : t('aiAutoBadge')}
+                  </Text>
+                </View>
+              )}
+            </View>
             <Text style={[styles.headerSubtitle, { color: colors.textMuted }]}>
               {t('aiChatSubtitle')}
             </Text>
@@ -196,12 +290,12 @@ export default function AIChatScreen() {
         </View>
       </View>
 
-      {/* Warning jika API Key belum dipasang */}
-      {hasKey === false && (
+      {/* Warning jika AI belum siap (belum unduh model & belum ada API key) */}
+      {aiStatus && !aiStatus.available && (
         <View style={[styles.warningBanner, { backgroundColor: '#fff3cd' }]}>
           <Ionicons name="warning-outline" size={18} color="#856404" />
           <Text style={[styles.warningText, { color: '#856404' }]}>
-            {t('geminiNotConfiguredMsg')}
+            {t('aiModelNotReadyBanner')}
           </Text>
         </View>
       )}
@@ -222,19 +316,25 @@ export default function AIChatScreen() {
             <View style={[styles.emptyIconBg, { backgroundColor: `${colors.primary}10` }]}>
               <Ionicons name="chatbubbles-outline" size={48} color={colors.primary} />
             </View>
-            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-              {t('aiChatEmpty')}
-            </Text>
+            <Text style={[styles.emptyText, { color: colors.textMuted }]}>{t('aiChatEmpty')}</Text>
 
             <View style={styles.quickPromptsContainer}>
               {quickPrompts.map((prompt, idx) => (
                 <TouchableOpacity
                   key={idx}
-                  style={[styles.quickPromptChip, { backgroundColor: colors.card, borderColor: colors.border }]}
+                  style={[
+                    styles.quickPromptChip,
+                    { backgroundColor: colors.card, borderColor: colors.border },
+                  ]}
                   onPress={() => handleSend(prompt)}
                   disabled={loading}
                 >
-                  <Ionicons name="help-circle-outline" size={16} color={colors.primary} style={{ marginRight: 6 }} />
+                  <Ionicons
+                    name="help-circle-outline"
+                    size={16}
+                    color={colors.primary}
+                    style={{ marginRight: 6 }}
+                  />
                   <Text style={[styles.quickPromptText, { color: colors.text }]}>{prompt}</Text>
                 </TouchableOpacity>
               ))}
@@ -247,14 +347,21 @@ export default function AIChatScreen() {
       {loading && (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="small" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textMuted }]}>
-            {t('processing')}
-          </Text>
+          <Text style={[styles.loadingText, { color: colors.textMuted }]}>{t('processing')}</Text>
         </View>
       )}
 
       {/* Form Input Pesan */}
-      <View style={[styles.inputContainer, { backgroundColor: colors.card, borderTopColor: colors.border, paddingBottom: insets.bottom > 0 ? insets.bottom : 12 }]}>
+      <View
+        style={[
+          styles.inputContainer,
+          {
+            backgroundColor: colors.card,
+            borderTopColor: colors.border,
+            paddingBottom: insets.bottom > 0 ? insets.bottom : 12,
+          },
+        ]}
+      >
         <TextInput
           style={[
             styles.input,
@@ -312,6 +419,24 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
+  },
+  badge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 10,
+    marginLeft: 8,
+  },
+  badgeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 4,
+  },
+  badgeText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   headerSubtitle: {
     fontSize: 12,
