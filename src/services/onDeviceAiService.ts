@@ -1,7 +1,7 @@
-import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import type { LlamaContext } from 'llama.rn';
-import { ParsedTransaction, GeminiImage, ChatMessage } from './geminiService';
+import { Platform } from 'react-native';
+import { ChatMessage, GeminiImage, ParsedTransaction } from './geminiService';
 
 const DEFAULT_CATEGORIES = [
   'Food',
