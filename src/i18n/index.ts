@@ -233,6 +233,13 @@ export const messages: Record<Language, MessageSet> = {
     geminiFallbackSection: 'Gemini API Key (Opsional Fallback Cloud)',
     geminiFallbackHint:
       'Digunakan saat mode Cloud aktif atau sebagai cadangan otomatis saat mode Auto.',
+    exportCopy: 'Copy untuk AI',
+    exportCopied: 'Tersalin ke clipboard!',
+    exportCopyFailed: 'Gagal menyalin',
+    exportFormat: 'Pilih Format Export',
+    exportTable: 'Tabel Markdown',
+    exportText: 'Teks Terstruktur',
+    exportJson: 'JSON',
   },
 
   en: {
@@ -462,6 +469,13 @@ export const messages: Record<Language, MessageSet> = {
     geminiFallbackSection: 'Gemini API Key (Optional Cloud Fallback)',
     geminiFallbackHint:
       'Used when Cloud mode is active or as an automatic backup in Auto Hybrid mode.',
+    exportCopy: 'Copy for AI',
+    exportCopied: 'Copied to clipboard!',
+    exportCopyFailed: 'Failed to copy',
+    exportFormat: 'Choose Export Format',
+    exportTable: 'Markdown Table',
+    exportText: 'Structured Text',
+    exportJson: 'JSON',
   },
 };
 
