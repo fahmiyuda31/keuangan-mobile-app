@@ -494,3 +494,63 @@ Konfigurasi disimpan dalam file `.env` di root proyek. Karena menggunakan Expo, 
   - [ ] Integrasi On-Device Vision Projector untuk OCR Struk belanja 100% offline tanpa Gemini Cloud.
   - [ ] Fitur transaksi berulang otomatis (_recurring transactions / scheduled reminders_).
   - [ ] Widget layar beranda (_Android App Widget_) untuk input cepat satu sentuhan.
+---
+
+## 11. Catatan Akurasi dan Batasan Arsitektur
+
+Dokumen ini mengikuti implementasi pada branch `main`. Untuk menghindari
+perbedaan antara dokumentasi dan kode, gunakan `package.json`, `src/`, serta
+`docs/IMPLEMENTATION-CHECKLIST.md` sebagai sumber verifikasi terakhir.
+
+### 11.1 Batas Relasi ERD
+
+Relasi `CATEGORY` ke `TRANSACTION` dan `BUDGET` pada diagram ERD bersifat
+logis. Kolom `category` menyimpan referensi kategori yang digunakan aplikasi,
+tetapi skema SQLite tidak menggunakan foreign key eksplisit. Karena itu:
+
+- penghapusan kategori tidak boleh diasumsikan otomatis menghapus transaksi;
+- proses CRUD harus menjaga konsistensi nama/ID kategori;
+- migrasi skema perlu diuji terhadap data lokal yang sudah ada.
+
+### 11.2 Batas Offline-First
+
+SQLite adalah sumber kebenaran lokal. Firebase hanya mirror untuk backup dan
+restore manual, bukan sinkronisasi realtime atau background sync. Data cloud
+dipisahkan berdasarkan `uid`, sedangkan data lokal berada pada perangkat dan
+tidak memiliki tabel `User`.
+
+### 11.3 Mode AI
+
+Router AI mendukung mode cloud Gemini dan mode on-device bila model lokal telah
+diunduh. Mode `auto` dapat mencoba model lokal lebih dahulu lalu memakai Gemini
+sebagai fallback sesuai konfigurasi. OCR struk tetap bergantung pada kapabilitas
+model dan konfigurasi mode yang aktif.
+
+API key Gemini adalah kredensial client-side. SecureStore diprioritaskan untuk
+penyimpanan pada perangkat, dengan `.env` sebagai fallback. API key tidak boleh
+di-commit ke repository dan akses cloud harus diperlakukan sebagai data
+eksternal yang berpotensi memiliki biaya dan batas kuota.
+
+### 11.4 Peta Verifikasi
+
+| Area | Sumber kode utama | Verifikasi |
+| --- | --- | --- |
+| SQLite, migrasi, CRUD | `src/services/dbService.ts` | `npm run type-check` dan uji pada dev build |
+| State write-through | `src/store/*.ts` | Tambah, ubah, hapus lalu restart aplikasi |
+| Navigasi | `src/navigation/` | Buka seluruh tab dan login gate |
+| AI cloud/on-device | `src/services/aiService.ts`, `geminiService.ts`, `onDeviceAiService.ts` | Uji dengan dan tanpa model/API key |
+| Firebase | `src/services/firebaseService.ts`, `src/utils/firebaseSync.ts` | Backup, restore, dan konflik `updatedAt` |
+| Import/export | `src/utils/import.ts`, `src/utils/sdocx.ts`, `src/services/exportService.ts` | Uji file valid, kosong, dan malformed |
+
+### 11.5 Checklist Dokumentasi
+
+Sebelum rilis atau merge perubahan arsitektur:
+
+1. Perbarui diagram bila tabel atau alur data berubah.
+2. Perbarui daftar dependensi bila SDK atau modul native berubah.
+3. Bedakan fitur yang terimplementasi dari fitur eksperimental atau opsional.
+4. Jalankan `npm run lint`, `npm run type-check`, dan `npm run format:check`.
+5. Verifikasi fitur native pada development build; Expo Go tidak cukup untuk
+   modul native.
+
+**Last Updated**: 2026-09-18
