@@ -2,8 +2,8 @@
 ## Keuangan Mobile App - AI Transaction Parsing
 
 **Version**: 2.0
-**Date**: 2026-08-05
-**Scope**: Natural-language transaction parsing (text input only). Receipt OCR / voice input are NOT implemented.
+**Date**: 2026-09-18
+**Scope**: Transaction parsing, receipt OCR, and financial assistant chat. Voice input is NOT implemented.
 
 ---
 
@@ -13,6 +13,8 @@
 
 ```typescript
 parseTransactionWithAI(input: string): Promise<ParsedTransaction>
+parseReceiptWithAI(image: GeminiImage): Promise<ParsedTransaction>
+chatWithFinancialAI(history: ChatMessage[], financialContext: string): Promise<string>
 isGeminiConfigured(): Promise<boolean>
 ```
 
@@ -27,7 +29,7 @@ interface ParsedTransaction {
 }
 ```
 
-Gemini is called with plain `fetch` to `generativelanguage.googleapis.com` — no SDK (`@google/generative-ai` is NOT installed). There is no image/audio input, no 9router, no `retryWithBackoff`, no `validateApiKey`.
+Gemini is called with plain `fetch` to `generativelanguage.googleapis.com` — no SDK (`@google/generative-ai` is NOT installed). There is no audio input, no `retryWithBackoff`, and no `validateApiKey`.
 
 ---
 
@@ -60,7 +62,7 @@ Settings screen → **AI / Gemini API Key**:
 
 ---
 
-## How parsing works
+## How transaction parsing works
 
 - Prompt asks the model to return JSON only:
   `{"amount": <number>, "description": "<string>", "category": "<string>", "type": "<income|expense>"}`
@@ -81,6 +83,15 @@ Settings screen → **AI / Gemini API Key**:
 
 There is no automatic retry.
 
+## Financial assistant chat
+
+The AI Chat tab builds a financial context from the current SQLite transactions and sends it
+together with the current session history to `chatWithFinancialAI`. The assistant is instructed
+to answer in Indonesian using the supplied data, including totals and spending insights. Chat
+history is held in screen state and is not persisted to SQLite or Firebase.
+
+The chat UI also provides quick prompts and renders common markdown formatting in responses.
+
 ---
 
 ## Cost / limits
@@ -98,4 +109,4 @@ There is no automatic retry.
 
 ---
 
-**Last Updated**: 2026-08-05
+**Last Updated**: 2026-09-18

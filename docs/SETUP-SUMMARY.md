@@ -1,7 +1,7 @@
 # Keuangan Mobile App - Setup Summary
 
 **Status**: SET UP — MVP working with local SQLite
-**Date**: 2026-08-05
+**Date**: 2026-09-18
 **Reference**: `README-SETUP.md` is the source of truth. Older revisions of this doc (Realm-based) are obsolete.
 
 ---
@@ -27,12 +27,13 @@
 - Typed param lists in `src/navigation/types.ts`
 
 ### 5. Screens
-- Dashboard, Transactions, Categories, Budgets, Settings (in `src/screens/`)
+- Dashboard, Transactions, Categories, Budgets, AI Chat, Settings (in `src/screens/`)
 - Settings includes Gemini API key management (save/clear)
+- Dashboard and Transactions include date-based filtering and financial summaries
 
 ### 6. Services
 - `dbService.ts` — SQLite CRUD (active)
-- `geminiService.ts` — AI text parsing (Gemini)
+- `geminiService.ts` — AI transaction parsing, receipt OCR, and financial assistant chat (Gemini)
 - `keyService.ts` — Gemini key lookup (SecureStore → `.env` fallback)
 
 ### 7. Code quality
@@ -57,10 +58,21 @@ Two sources, checked in this order at call time:
 1. **Settings screen** (expo-secure-store, per device)
 2. **`.env`** — `EXPO_PUBLIC_GEMINI_API_KEY` (fallback)
 
-## Not implemented yet
+## Explicitly out of scope
 
-Category/Budget CRUD UI completion, charts, sync/import-export, i18n, dark mode, OCR/voice, tests, DB migrations.
+Realtime/background cloud sync, voice input/voice memo, database encryption, and Google Sign-In.
+
+## Verification
+
+Run the repository checks before merging:
+
+```bash
+npm run lint
+npm run type-check
+npm run format:check
+npm test
+```
 
 ---
 
-**Last Updated**: 2026-08-05
+**Last Updated**: 2026-09-18

@@ -1,7 +1,7 @@
 # Keuangan Mobile App - Project Setup (Current State)
 
 **Status**: SET UP — SQLite persistence working, dev build required
-**Date**: 2026-08-05
+**Date**: 2026-09-18
 **Reference**: `README-SETUP.md` is the source of truth. Older content in this file (Realm, RN 0.86, Expo SDK 57, NativeWind, chart-kit) is obsolete.
 
 ---
@@ -23,7 +23,9 @@
 | ESLint | ^10.7.0 (flat config) |
 | Prettier | ^3.9.6 |
 
-NOT installed (older docs mention them — do not assume): Realm, axios, `@google/generative-ai`, nativewind/tailwind, react-native-chart-kit, expo-camera, expo-av, expo-image-picker, async-storage, eslint-config-expo.
+Not used (older docs mention them — do not assume): Realm, axios, `@google/generative-ai`, nativewind/tailwind, expo-av.
+The current project uses `react-native-chart-kit`, `expo-camera`, `expo-image-picker`,
+`@react-native-async-storage/async-storage`, and `eslint-config-expo`.
 
 ---
 
@@ -35,7 +37,7 @@ src/
   database/models/          # TS interfaces: Transaction, Category, Budget
   services/
     dbService.ts            # SQLite CRUD (expo-sqlite) — ACTIVE
-    geminiService.ts        # AI text parsing (Gemini)
+    geminiService.ts        # AI parsing, receipt OCR, and financial chat (Gemini)
     keyService.ts           # Gemini key: SecureStore -> .env fallback
   store/                    # Zustand: transaction, category, budget, app
   navigation/               # types.ts, index.tsx, BottomTabNavigator.tsx
@@ -48,7 +50,7 @@ src/
 
 - File: `keuangan.db` (expo-sqlite, `openDatabaseSync`)
 - Tables: `"Transaction"` (quoted — reserved keyword), `Category`, `Budget`
-- No encryption, no Realm, no migration framework (schema is `CREATE TABLE IF NOT EXISTS`)
+- No encryption and no Realm; schema migrations use `PRAGMA user_version`
 - Native modules → dev build required (`npm run prebuild`, then `npm run android|ios`); does not run in Expo Go
 
 ## Gemini key flow
@@ -82,4 +84,4 @@ npm run format:check
 
 ---
 
-**Last Updated**: 2026-08-05
+**Last Updated**: 2026-09-18

@@ -12,6 +12,7 @@ A mobile personal finance app built with React Native and Expo SDK 54. Track exp
 - **Offline Support**: Full offline capability with local SQLite database
 - **Cloud Backup**: Manual Firebase (Firestore) backup/restore with email/password auth (`src/services/firebaseService.ts`)
 - **Login**: App gated behind email/password sign-in (`src/screens/AuthScreen.tsx`)
+- **AI Financial Assistant**: Chat about financial status using current SQLite transaction context
 
 ## Project Structure
 
@@ -26,7 +27,7 @@ keuangan-mobile-app/
 │   ├── screens/                  # dashboard/, transactions/, categories/, budgets/, Settings
 │   ├── services/
 │   │   ├── dbService.ts          # SQLite CRUD (expo-sqlite) - the active DB layer
-│   │   ├── geminiService.ts      # AI transaction parsing (Gemini)
+│   │   ├── geminiService.ts      # AI parsing, receipt OCR, and financial chat (Gemini)
 │   │   ├── keyService.ts         # Gemini key lookup (SecureStore -> .env fallback)
 │   ├── store/                    # Zustand stores (in-memory, hydrate from dbService)
 │   ├── utils/                    # Utility functions
@@ -119,7 +120,7 @@ Gotchas:
 
 - `Transaction` is a SQLite reserved keyword — the table name is always quoted as `"Transaction"` in SQL. `Transaction` (interface) and `Transactions` (screen name) are unaffected.
 - Default categories are seeded on first launch (`seedDefaultCategories`).
-- Schema is created with `CREATE TABLE IF NOT EXISTS` — no migration framework yet.
+- Schema uses a versioned migration framework via `PRAGMA user_version`; migration v1 is the current schema.
 
 ### Gemini API Key
 
@@ -129,7 +130,8 @@ Gotchas:
 2. `process.env.EXPO_PUBLIC_GEMINI_API_KEY` — fallback
 3. otherwise unconfigured → AI parsing errors with a "not configured" message
 
-`parseTransactionWithAI()` in `src/services/geminiService.ts` does text-only parsing via Gemini REST API. No OCR, no voice, no 9router.
+`src/services/geminiService.ts` provides text parsing, receipt OCR, and financial assistant chat
+via the Gemini REST API. Voice input is not implemented.
 
 ### Navigation
 
@@ -191,12 +193,13 @@ The `docs/` directory (PRD, IMPLEMENTATION-CHECKLIST, SETUP-SUMMARY, GEMINI-INTE
 - [x] Transaction management (CRUD)
 - [x] AI text parsing (Gemini)
 - [x] Gemini key management (Settings)
-- [ ] Complete Category management (CRUD)
-- [ ] Complete Budget management
-- [ ] Data sync and import/export
-- [ ] Analytics and reporting
-- [ ] Internationalization (i18n)
-- [ ] Dark mode support
+- [x] Complete Category management (CRUD)
+- [x] Complete Budget management
+- [x] Data sync and import/export
+- [x] Analytics and reporting
+- [x] Internationalization (i18n)
+- [x] Dark mode support
+- [x] AI financial assistant chat
 
 ## Known Issues
 
@@ -206,4 +209,4 @@ The `docs/` directory (PRD, IMPLEMENTATION-CHECKLIST, SETUP-SUMMARY, GEMINI-INTE
 ---
 
 **Version**: 1.0.0
-**Last Updated**: 2026-08-05
+**Last Updated**: 2026-09-18

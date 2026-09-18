@@ -3,7 +3,7 @@
 
 **Project**: Keuangan Mobile App
 **Architecture**: Expo SDK 54 + React Native 0.81 + TypeScript, offline-first, SQLite
-**Date**: 2026-08-05
+**Date**: 2026-09-18
 **Reference**: `README-SETUP.md` is the source of truth. This checklist reflects what is actually implemented.
 
 ---
@@ -29,15 +29,17 @@
 ### AI Parsing — `src/services/geminiService.ts`
 - [x] Text transaction parsing via `parseTransactionWithAI(input)`
 - [x] Receipt OCR via Gemini vision `parseReceiptWithAI(image)` (inline base64 image)
+- [x] Financial assistant chat via `chatWithFinancialAI(history, financialContext)` using SQLite transaction context
 - [x] Gemini via direct `fetch` (no SDK)
 - [x] Key resolution via `src/services/keyService.ts`: `expo-secure-store` (set from Settings) → `EXPO_PUBLIC_GEMINI_API_KEY` fallback
 - [x] Settings screen: save / clear the Gemini API key
 
 ### Screens
-- [x] Dashboard (filter periode Harian/Mingguan/Bulanan/Tahunan, summary + expense-by-category PieChart per periode, trend BarChart income vs expense, recent transactions)
-- [x] Transactions (list sorted by date desc, add via manual form + AI text parse + receipt OCR, edit, delete, date picker, notes)
+- [x] Dashboard (filter periode Harian/Mingguan/Bulanan/Tahunan, date picker, summary + expense-by-category PieChart per periode, trend BarChart income vs expense, recent transactions)
+- [x] Transactions (list sorted by date desc, manual/AI/OCR entry, edit, delete, notes, day/week/month/custom-range filters, bulk selection/delete, income/expense totals, remaining balance, savings percentage)
 - [x] Categories — full CRUD
 - [x] Budgets — full CRUD
+- [x] AI Chat — financial assistant with chat history, quick prompts, markdown response rendering, and SQLite-backed context
 - [x] Settings (Gemini API key, theme toggle, language toggle, export CSV/PDF, import bulk file catatan/Samsung Notes — txt/md & sdocx via `src/utils/sdocx.ts`)
 
 ### UI / i18n / Theme
@@ -64,4 +66,4 @@
 
 ---
 
-**Last Updated**: 2026-08-05
+**Last Updated**: 2026-09-18

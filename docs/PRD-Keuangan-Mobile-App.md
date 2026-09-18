@@ -2,7 +2,7 @@
 ## Keuangan Mobile App
 
 **Document Version:** 2.0
-**Date Updated:** 2026-08-05
+**Date Updated:** 2026-09-18
 **Status:** Active — reflects current implementation
 **Platform:** iOS & Android (Expo SDK 54, React Native)
 **Reference:** `README-SETUP.md` for architecture; `IMPLEMENTATION-CHECKLIST.md` for status.
@@ -32,13 +32,17 @@ Aplikasi finansial **standalone, offline-first** di iOS dan Android. Semua data 
 #### Dashboard
 - Ringkasan saldo, income, expense
 - Transaksi terbaru
+- Filter periode harian/mingguan/bulanan/tahunan dengan date picker
+- Grafik pengeluaran per kategori dan tren income vs expense
 
 #### Transaction Management
 - Tambah transaksi manual (form: amount, description, type, category, date picker, notes)
 - Tambah via AI text parsing (`parseTransactionWithAI`)
 - Tambah via OCR foto struk (`parseReceiptWithAI`, kamera/gallery)
 - List transaksi (urut by date desc), edit, delete (via UI)
-- Filter helper di store: by category, by date range (sudah ada, belum dipakai UI)
+- Filter transaksi berdasarkan hari, minggu, bulan, atau rentang tanggal kustom
+- Hapus transaksi secara bulk melalui selection mode
+- Ringkasan income, expense, saldo tersisa, dan persentase tabungan untuk hasil filter
 
 #### Categories
 - Default categories di-seed otomatis saat first launch (income: Gaji, Bonus, Investasi, Lainnya; expense: Makanan, Transportasi, Hiburan, Utilitas, Kesehatan, Pendidikan, Belanja, Lainnya)
@@ -59,13 +63,17 @@ Aplikasi finansial **standalone, offline-first** di iOS dan Android. Semua data 
 - **Export Data**: CSV & PDF
 - **Cloud Backup** (Firebase): status login, tombol Backup ke Cloud & Restore dari Cloud, Logout (login/register lewat screen AuthScreen)
 
+#### AI Financial Assistant
+- Tab AI Chat untuk bertanya tentang kondisi keuangan berdasarkan konteks transaksi dari SQLite
+- Riwayat percakapan selama sesi, pertanyaan cepat, dan jawaban berformat markdown
+
 #### Authentication (login gate)
 - `src/screens/AuthScreen.tsx`: form email/password (Masuk/Daftar), tampil sebelum app kalau belum login
 - Session persist via `@react-native-async-storage/async-storage` - setelah login sekali, buka app langsung masuk (offline aman)
 - Kalau Firebase belum dikonfigurasi (`.env` kosong) atau platform web: gate di-skip (app langsung terbuka)
 
 #### Navigation & UI
-- Bottom tab: Dashboard  Transactions  Categories  Budgets  Settings
+- Bottom tab: Dashboard → Transactions → Categories → Budgets → AI Chat → Settings
 - `StyleSheet` (tanpa NativeWind), brand color primary `#208AEF`
 - `SafeAreaView` dari `react-native-safe-area-context`
 - Dark mode via palette `src/constants/theme.ts` + `useTheme()`
@@ -111,7 +119,7 @@ Aplikasi finansial **standalone, offline-first** di iOS dan Android. Semua data 
 
 ## AI Integration
 
-- Dua fungsi di `src/services/geminiService.ts`: `parseTransactionWithAI(input)` (teks) & `parseReceiptWithAI(image)` (OCR foto, inline base64)
+- Tiga fungsi di `src/services/geminiService.ts`: `parseTransactionWithAI(input)` (teks), `parseReceiptWithAI(image)` (OCR foto, inline base64), dan `chatWithFinancialAI(history, financialContext)` (asisten keuangan)
 - Key di-resolve saat panggil via `src/services/keyService.ts`: SecureStore (Settings) → `EXPO_PUBLIC_GEMINI_API_KEY` (`.env`)
 - Gemini REST via `fetch`, tanpa SDK
 - Key Gemini valid mulai `AIza`
@@ -127,4 +135,4 @@ Lihat `GEMINI-INTEGRATION-GUIDE.md` untuk detail.
 - **Code quality**: `npm run lint`, `npm run type-check`, `npm run format:check` sebelum selesai; `npm test` (jest-expo, 5 suite)
 ---
 
-**Last Updated**: 2026-08-05
+**Last Updated**: 2026-09-18
