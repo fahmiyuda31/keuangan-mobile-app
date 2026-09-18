@@ -4,7 +4,7 @@
 **Project**: Keuangan Mobile App
 **Architecture**: Expo SDK 54 + React Native 0.81 + TypeScript, offline-first, SQLite
 **Date**: 2026-09-18
-**Reference**: `README-SETUP.md` is the source of truth. This checklist reflects what is actually implemented.
+**Reference**: `README.md` is the source of truth. This checklist reflects what is actually implemented.
 
 ---
 

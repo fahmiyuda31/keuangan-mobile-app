@@ -2,7 +2,7 @@
 
 **Status**: SET UP — SQLite persistence working, dev build required
 **Date**: 2026-09-18
-**Reference**: `README-SETUP.md` is the source of truth. Older content in this file (Realm, RN 0.86, Expo SDK 57, NativeWind, chart-kit) is obsolete.
+**Reference**: `README.md` is the source of truth. Older content in this file (Realm, RN 0.86, Expo SDK 57, NativeWind, chart-kit) is obsolete.
 
 ---
 

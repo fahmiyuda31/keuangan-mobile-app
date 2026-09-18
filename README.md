@@ -1,56 +1,212 @@
-# Welcome to your Expo app 👋
+# Keuangan Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A mobile personal finance app built with React Native and Expo SDK 54. Track expenses, manage categories, set budgets, and maintain control over your personal finances with ease.
 
-## Get started
+## Features (MVP Phase 1)
 
-1. Install dependencies
+- **Dashboard**: Overview of income, expenses, and balance
+- **Transactions**: View, add, and manage financial transactions
+- **Categories**: Organize transactions with customizable categories
+- **Budgets**: Set and track budgets for different spending categories
+- **Settings**: Configure preferences, including the Gemini API key
+- **Offline Support**: Full offline capability with local SQLite database
+- **Cloud Backup**: Manual Firebase (Firestore) backup/restore with email/password auth (`src/services/firebaseService.ts`)
+- **Login**: App gated behind email/password sign-in (`src/screens/AuthScreen.tsx`)
+- **AI Financial Assistant**: Chat about financial status using current SQLite transaction context
 
+## Project Structure
+
+```
+keuangan-mobile-app/
+├── app/                          # Expo Router entry (app/index.tsx)
+├── src/
+│   ├── components/               # UI + feature components
+│   ├── database/
+│   │   └── models/               # TypeScript interfaces (Transaction, Category, Budget)
+│   ├── navigation/               # React Navigation config (manual, not expo-router routing)
+│   ├── screens/                  # dashboard/, transactions/, categories/, budgets/, Settings
+│   ├── services/
+│   │   ├── dbService.ts          # SQLite CRUD (expo-sqlite) - the active DB layer
+│   │   ├── geminiService.ts      # AI parsing, receipt OCR, and financial chat (Gemini)
+│   │   ├── keyService.ts         # Gemini key lookup (SecureStore -> .env fallback)
+│   ├── store/                    # Zustand stores (in-memory, hydrate from dbService)
+│   ├── utils/                    # Utility functions
+│   └── constants/                # App constants
+├── assets/
+├── .env.example                  # Environment variables template
+├── app.json                      # Expo app configuration
+├── eslint.config.js              # Flat ESLint config (typescript-eslint + prettier)
+├── package.json
+└── tsconfig.json
+```
+
+## Tech Stack
+
+- **Framework**: React Native + Expo SDK 54 (RN 0.81, React 19.1)
+- **Language**: TypeScript
+- **State Management**: Zustand
+- **Database**: expo-sqlite (local, offline-first)
+- **Cloud backup**: Firebase JS SDK v12 (Firestore + Auth email/password, `@react-native-async-storage/async-storage` for auth persistence)
+- **Navigation**: React Navigation (bottom tabs + native stack)
+- **Code Quality**: ESLint (flat config) + Prettier
+
+## Installation
+
+### Prerequisites
+
+- Node.js 18+
+- Android: Android Studio + SDK (native modules need a dev build)
+- iOS: Xcode + CocoaPods
+
+### Setup Steps
+
+1. **Install dependencies**
    ```bash
    npm install
    ```
 
-2. Start the app
-
+2. **Setup environment variables** (optional — only needed as fallback key)
    ```bash
-   npx expo start
+   cp .env.example .env
    ```
 
-In the output, you'll find options to open the app in a
+3. **Prebuild (required — expo-sqlite/expo-secure-store are native modules, Expo Go won't work)**
+   ```bash
+   npm run prebuild
+   ```
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+4. **Run on your device**
+   ```bash
+   npm run android   # dev build
+   # or: npm run ios
+   # or: npm start   # then press a / i / w
+   ```
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+## Development Commands
 
 ```bash
-npm run reset-project
+npm start            # Start development server
+npm run android      # Run on Android (dev build)
+npm run ios          # Run on iOS
+npm run web          # Run on Web
+npm run lint         # Lint code
+npm run lint:fix     # Auto-fix linting
+npm run format       # Format code (src/** only)
+npm run format:check # Check formatting (src/** only)
+npm run type-check   # TypeScript type check
+npm run prebuild     # Regenerate ios/ and android/ (destructive)
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Architecture
 
-### Other setup steps
+### State Management (Zustand)
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+- **`transactionStore`**: Manages transaction data and operations
+- **`categoryStore`**: Manages category data
+- **`budgetStore`**: Manages budget data
+- **`appStore`**: Global app state (theme)
 
-## Learn more
+Stores are in-memory only; data is loaded from SQLite via `loadFromDb()` on app start and every mutation writes through to `dbService`.
 
-To learn more about developing your project with Expo, look at the following resources:
+### Database (SQLite)
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+Local persistence via `src/services/dbService.ts` (expo-sqlite). Three tables, one DB file `keuangan.db`:
 
-## Join the community
+- **`"Transaction"`**: id, amount, description, category, type (`income`/`expense`), date, notes
+- **`Category`**: id, name, color, icon, type
+- **`Budget`**: id, category, amount, period, startDate, endDate
 
-Join our community of developers creating universal apps.
+Gotchas:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- `Transaction` is a SQLite reserved keyword — the table name is always quoted as `"Transaction"` in SQL. `Transaction` (interface) and `Transactions` (screen name) are unaffected.
+- Default categories are seeded on first launch (`seedDefaultCategories`).
+- Schema uses a versioned migration framework via `PRAGMA user_version`; migration v1 is the current schema.
+
+### Gemini API Key
+
+`src/services/keyService.ts` resolves the key at call time:
+
+1. `expo-secure-store` (`gemini_api_key`, settable from **Settings** screen) — first
+2. `process.env.EXPO_PUBLIC_GEMINI_API_KEY` — fallback
+3. otherwise unconfigured → AI parsing errors with a "not configured" message
+
+`src/services/geminiService.ts` provides text parsing, receipt OCR, and financial assistant chat
+via the Gemini REST API. Voice input is not implemented.
+
+### Navigation
+
+React Navigation, manually composed in `src/navigation/`:
+- `RootNavigator` (native stack) → `BottomTabNavigator` (5 tabs)
+- Typed param lists in `src/navigation/types.ts`
+
+No `_layout.tsx`; expo-router is only used as the entry mechanism (`main: expo-router/entry`).
+
+## Styling
+
+React Native `StyleSheet` (no NativeWind/Tailwind). Design tokens:
+
+- **Primary**: `#208AEF`
+- **Success**: `#4caf50`
+- **Error**: `#ff6b6b`
+- **Background**: `#f5f5f5`
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+```env
+# Gemini AI (fallback only - the Settings screen can override per device)
+EXPO_PUBLIC_GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+Only `EXPO_PUBLIC_`-prefixed vars are inlined into the app bundle. Gemini keys always start with `AIza`.
+
+## Code Style
+
+Run before committing:
+
+```bash
+npm run lint
+npm run type-check
+npm run format:check
+```
+
+## Documentation
+
+The `docs/` directory (PRD, IMPLEMENTATION-CHECKLIST, SETUP-SUMMARY, GEMINI-INTEGRATION-GUIDE) is maintained to match the current SQLite-based code. **This file remains the primary setup/architecture reference; trust code first.**
+
+- [Expo SDK 54 Docs](https://docs.expo.dev/versions/v54.0.0/)
+- [expo-sqlite](https://docs.expo.dev/versions/v54.0.0/sdk/sqlite/)
+- [expo-secure-store](https://docs.expo.dev/versions/v54.0.0/sdk/securestore/)
+- [React Navigation](https://reactnavigation.org/)
+- [Zustand](https://github.com/pmndrs/zustand)
+
+## Phase 1 MVP Roadmap
+
+- [x] Project initialization and setup
+- [x] Folder structure and configuration
+- [x] Core UI components
+- [x] Navigation structure
+- [x] SQLite models + CRUD service (`dbService.ts`)
+- [x] State management (Zustand)
+- [x] Dashboard screen
+- [x] Transaction management (CRUD)
+- [x] AI text parsing (Gemini)
+- [x] Gemini key management (Settings)
+- [x] Complete Category management (CRUD)
+- [x] Complete Budget management
+- [x] Data sync and import/export
+- [x] Analytics and reporting
+- [x] Internationalization (i18n)
+- [x] Dark mode support
+- [x] AI financial assistant chat
+
+## Known Issues
+
+- **Navigation warning**: "Passing an object as the argument to 'navigate' is deprecated" — emitted by a dependency internally, not from app code.
+- **Gemini**: requires a valid key (`AIza...`); invalid keys surface as HTTP 400 `API_KEY_INVALID`.
+
+---
+
+**Version**: 1.0.0
+**Last Updated**: 2026-09-18

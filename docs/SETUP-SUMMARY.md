@@ -2,7 +2,7 @@
 
 **Status**: SET UP — MVP working with local SQLite
 **Date**: 2026-09-18
-**Reference**: `README-SETUP.md` is the source of truth. Older revisions of this doc (Realm-based) are obsolete.
+**Reference**: `README.md` is the source of truth. Older revisions of this doc (Realm-based) are obsolete.
 
 ---
 

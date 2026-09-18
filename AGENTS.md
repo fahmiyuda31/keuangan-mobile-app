@@ -28,12 +28,4 @@ This project is pinned to **Expo SDK 54** (`expo ~54.0.0`, RN 0.81, React 19.1).
 - Styling is RN `StyleSheet` (no NativeWind/Tailwind). Brand colors live in `src/constants/index.ts` (primary `#208AEF`, success `#4caf50`, error `#ff6b6b`), though screens often hardcode them.
 - `docs/` (PRD, IMPLEMENTATION-CHECKLIST, GEMINI-INTEGRATION-GUIDE, etc.) is maintained to match the current SQLite-based code. Trust code first, but docs are kept accurate.
 
-Existing instruction sources: `CLAUDE.md` just includes this file. `README-SETUP.md` is the up-to-date setup/architecture reference (SQLite). `docs/` is kept in sync with the code.
-
-<!-- antislop:start -->
-## antislop
-
-For UI, copy, people, mobile layout, or code comments work, read `antislop.md` (core) and then the skill for the task. Core only is installed; install optional sub-skills (`antislop-ui`, `antislop-copywriting`, `antislop-human`, `antislop-layoutmobile`, `antislop-code`) alongside the core release before pointing to them. See `DESIGN.md` for visual direction and dials.
-
-Before starting UI work, ask the user when antislop applies: during the work, or after it is done.
-<!-- antislop:end -->
+Existing instruction sources: `CLAUDE.md` just includes this file. `README.md` is the up-to-date setup/architecture reference (SQLite). `docs/` is kept in sync with the code.
