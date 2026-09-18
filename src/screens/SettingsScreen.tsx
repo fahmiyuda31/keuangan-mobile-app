@@ -10,7 +10,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as DocumentPicker from 'expo-document-picker';
-import { useAppStore, useTransactionStore, useCategoryStore, useBudgetStore } from '@/store';
+import { Ionicons } from '@expo/vector-icons';
+import NetInfo from '@react-native-community/netinfo';
+import {
+  useAppStore,
+  useTransactionStore,
+  useCategoryStore,
+  useBudgetStore,
+  useModelStore,
+} from '@/store';
 import { useTheme, Theme } from '@/hooks/use-theme';
 import { useT } from '@/i18n';
 import { Card, Button, Input, ModelSelect } from '@/components/ui';
@@ -60,7 +68,21 @@ export default function SettingsScreen() {
     null
   );
 
+  const {
+    status: modelStatus,
+    downloadProgress,
+    modelSize,
+    aiMode,
+    setAiMode,
+    backendInfo,
+    startDownload,
+    cancelDownload,
+    deleteModel,
+    initStore,
+  } = useModelStore();
+
   useEffect(() => {
+    initStore();
     getGeminiKey().then((key) => setApiKey(key || ''));
     getGeminiModel().then(setModel);
     if (Platform.OS === 'web' || !isFirebaseConfigured()) return;
@@ -70,6 +92,39 @@ export default function SettingsScreen() {
     });
     return unsubscribe;
   }, []);
+
+  const handleDownloadModel = async () => {
+    try {
+      const netState = await NetInfo.fetch();
+      if (netState.type === 'cellular') {
+        Alert.alert(t('aiCellularWarningTitle'), t('aiCellularWarningMsg'), [
+          { text: t('cancel'), style: 'cancel' },
+          {
+            text: t('aiDownloadModel'),
+            onPress: () => startDownload(),
+          },
+        ]);
+      } else {
+        await startDownload();
+      }
+    } catch (err: any) {
+      Alert.alert(t('error'), err.message || 'Gagal mengunduh model.');
+    }
+  };
+
+  const handleDeleteModel = () => {
+    Alert.alert(t('aiDeleteModelConfirmTitle'), t('aiDeleteModelConfirmMsg'), [
+      { text: t('cancel'), style: 'cancel' },
+      {
+        text: t('delete'),
+        style: 'destructive',
+        onPress: async () => {
+          await deleteModel();
+          Alert.alert(t('success'), 'Model berhasil dihapus.');
+        },
+      },
+    ]);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -294,9 +349,140 @@ export default function SettingsScreen() {
           </View>
         </Card>
 
+        {/* On-Device AI Management */}
         <Card style={styles.card}>
-          <Text style={styles.sectionTitle}>{t('aiGeminiSection')}</Text>
-          <Text style={styles.sectionHint}>{t('aiGeminiHint')}</Text>
+          <View style={styles.sectionHeaderRow}>
+            <Ionicons name="hardware-chip-outline" size={20} color={colors.primary} />
+            <Text style={[styles.sectionTitle, { marginLeft: 8 }]}>{t('aiOnDeviceSection')}</Text>
+          </View>
+          <Text style={styles.sectionHint}>{t('aiOnDeviceHint')}</Text>
+
+          {/* AI Mode Selector */}
+          <Text style={styles.subSectionTitle}>{t('aiMode')}</Text>
+          <View style={styles.optionRow}>
+            {(['auto', 'on-device', 'cloud'] as const).map((mode) => (
+              <TouchableOpacity
+                key={mode}
+                style={[styles.optionChip, aiMode === mode && styles.optionChipActive]}
+                onPress={() => setAiMode(mode)}
+              >
+                <Text
+                  style={[styles.optionChipText, aiMode === mode && styles.optionChipTextActive]}
+                >
+                  {mode === 'auto'
+                    ? t('aiModeAuto')
+                    : mode === 'on-device'
+                      ? t('aiModeOnDevice')
+                      : t('aiModeCloud')}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Text style={styles.subSectionHint}>{t('aiModeHint')}</Text>
+
+          {/* Model Status Card */}
+          <View
+            style={[
+              styles.statusBox,
+              { backgroundColor: colors.backgroundElement, borderColor: colors.border },
+            ]}
+          >
+            <View style={styles.statusRow}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <View
+                  style={[
+                    styles.statusDot,
+                    {
+                      backgroundColor:
+                        modelStatus === 'ready'
+                          ? colors.success || '#4caf50'
+                          : modelStatus === 'downloading'
+                            ? colors.primary
+                            : '#9e9e9e',
+                    },
+                  ]}
+                />
+                <Text style={[styles.statusLabel, { color: colors.text }]}>
+                  {t('aiModelStatus')}:
+                </Text>
+              </View>
+              <Text
+                style={[
+                  styles.statusValue,
+                  {
+                    color:
+                      modelStatus === 'ready'
+                        ? colors.success || '#4caf50'
+                        : modelStatus === 'downloading'
+                          ? colors.primary
+                          : colors.textMuted,
+                  },
+                ]}
+              >
+                {modelStatus === 'ready'
+                  ? `${t('aiModelReady')} (${modelSize || '~1.6 GB'})`
+                  : modelStatus === 'downloading'
+                    ? t('aiModelDownloading').replace('{progress}', downloadProgress.toString())
+                    : t('aiModelNotDownloaded')}
+              </Text>
+            </View>
+
+            <View style={[styles.statusRow, { marginTop: 6 }]}>
+              <Text style={[styles.statusLabel, { color: colors.textMuted }]}>
+                {t('aiHardwareBackend')}:
+              </Text>
+              <Text style={[styles.statusValue, { color: colors.text }]}>{backendInfo}</Text>
+            </View>
+
+            {/* Download Progress Bar */}
+            {modelStatus === 'downloading' && (
+              <View style={styles.progressContainer}>
+                <View style={[styles.progressBarBg, { backgroundColor: colors.border }]}>
+                  <View
+                    style={[
+                      styles.progressBarFill,
+                      {
+                        backgroundColor: colors.primary,
+                        width: `${downloadProgress}%`,
+                      },
+                    ]}
+                  />
+                </View>
+                <Text style={[styles.progressText, { color: colors.textMuted }]}>
+                  {downloadProgress}%
+                </Text>
+              </View>
+            )}
+          </View>
+
+          {/* Model Action Buttons */}
+          {modelStatus === 'downloading' ? (
+            <Button
+              title={t('aiCancelDownload')}
+              onPress={cancelDownload}
+              variant="secondary"
+              style={styles.button}
+            />
+          ) : modelStatus === 'ready' ? (
+            <Button
+              title={t('aiDeleteModel')}
+              onPress={handleDeleteModel}
+              variant="danger"
+              style={styles.button}
+            />
+          ) : (
+            <Button
+              title={t('aiDownloadModel')}
+              onPress={handleDownloadModel}
+              style={styles.button}
+            />
+          )}
+        </Card>
+
+        {/* Gemini API Key (Fallback Cloud) */}
+        <Card style={styles.card}>
+          <Text style={styles.sectionTitle}>{t('geminiFallbackSection')}</Text>
+          <Text style={styles.sectionHint}>{t('geminiFallbackHint')}</Text>
           <Input
             label={t('geminiApiKey')}
             value={apiKey}
@@ -462,10 +648,75 @@ const createStyles = (colors: Theme) =>
       marginBottom: 4,
       marginTop: 8,
     },
+    sectionHeaderRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 8,
+      marginBottom: 4,
+    },
+    subSectionTitle: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text,
+      marginTop: 10,
+      marginBottom: 6,
+    },
+    subSectionHint: {
+      fontSize: 12,
+      color: colors.textMuted,
+      marginBottom: 10,
+    },
     sectionHint: {
       fontSize: 13,
       color: colors.textMuted,
       marginBottom: 8,
+    },
+    statusBox: {
+      borderRadius: 10,
+      borderWidth: 1,
+      padding: 12,
+      marginVertical: 10,
+    },
+    statusRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    statusDot: {
+      width: 8,
+      height: 8,
+      borderRadius: 4,
+      marginRight: 8,
+    },
+    statusLabel: {
+      fontSize: 13,
+      fontWeight: '500',
+    },
+    statusValue: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    progressContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginTop: 10,
+      gap: 8,
+    },
+    progressBarBg: {
+      flex: 1,
+      height: 8,
+      borderRadius: 4,
+      overflow: 'hidden',
+    },
+    progressBarFill: {
+      height: '100%',
+      borderRadius: 4,
+    },
+    progressText: {
+      fontSize: 12,
+      fontWeight: '600',
+      minWidth: 36,
+      textAlign: 'right',
     },
     optionRow: {
       flexDirection: 'row',

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Modal, Input, Button } from '@/components/ui';
 import { useCategoryStore } from '@/store';
 import { Category } from '@/database/models';
@@ -19,7 +20,24 @@ const ICONS = [
   'game-controller',
   'gift',
   'cash',
+  'trending-up',
+  'ellipsis-horizontal',
 ];
+
+const ICON_GLYPHS: Record<string, keyof typeof Ionicons.glyphMap> = {
+  tag: 'pricetag',
+  restaurant: 'restaurant',
+  cart: 'cart',
+  car: 'car',
+  flash: 'flash',
+  medical: 'medical',
+  school: 'school',
+  'game-controller': 'game-controller',
+  gift: 'gift',
+  cash: 'cash',
+  'trending-up': 'trending-up',
+  'ellipsis-horizontal': 'ellipsis-horizontal',
+};
 
 interface AddCategoryModalProps {
   visible: boolean;
@@ -148,7 +166,11 @@ export default function AddCategoryModal({
               style={[styles.iconChip, icon === i && styles.iconChipActive]}
               onPress={() => setIcon(i)}
             >
-              <Text style={styles.iconText}>{i === 'tag' ? '🏷️' : i}</Text>
+              <Ionicons
+                name={ICON_GLYPHS[i] ?? 'pricetag'}
+                size={16}
+                color={icon === i ? '#fff' : colors.text}
+              />
             </TouchableOpacity>
           ))}
         </View>
@@ -246,10 +268,6 @@ const createStyles = (colors: Theme) =>
     iconChipActive: {
       backgroundColor: colors.primary,
       borderColor: colors.primary,
-    },
-    iconText: {
-      fontSize: 13,
-      color: colors.text,
     },
     actions: {
       marginTop: 8,

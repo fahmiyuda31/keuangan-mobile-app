@@ -56,7 +56,6 @@ export default function App() {
         {showApp ? <RootNavigator /> : <AuthScreen />}
         <StatusBar
           style={resolvedTheme === 'dark' ? 'light' : 'dark'}
-          backgroundColor="transparent"
         />
       </SafeAreaProvider>
     </GestureHandlerRootView>

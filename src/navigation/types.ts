@@ -19,4 +19,3 @@ export type TabParamList = {
   AIChat: undefined;
   Settings: undefined;
 };
-

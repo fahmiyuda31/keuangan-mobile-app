@@ -527,4 +527,3 @@ ${budgetSummary.length > 0 ? budgetSummary.join('\n') : 'Belum ada budget terpas
 === 15 TRANSAKSI TERBARU ===
 ${recentTransactions.length > 0 ? recentTransactions.join('\n') : 'Belum ada transaksi'}`;
 }
-

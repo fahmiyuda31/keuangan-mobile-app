@@ -9,6 +9,8 @@ import {
   Modal,
   Platform,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
+import { Ionicons } from '@expo/vector-icons';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTransactionStore, useCategoryStore } from '@/store';
@@ -108,6 +110,7 @@ export default function TransactionsScreen() {
   const [selectMode, setSelectMode] = useState(false);
   const [activeFilter, setActiveFilter] = useState<ActiveFilter>(null);
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   const [draftMode, setDraftMode] = useState<DraftMode>('range');
   const [draftDay, setDraftDay] = useState(new Date());
@@ -357,6 +360,62 @@ export default function TransactionsScreen() {
     }
   };
 
+  const formatCurrency = (amount: number) =>
+    `Rp ${amount.toLocaleString('id-ID')}`;
+
+  const formatDate = (d: Date) =>
+    `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+
+  const generateExportText = (format: 'table' | 'text' | 'json') => {
+    const label = filterLabel();
+    const header = `Transaksi: ${label}\nTotal: Pemasukan ${formatCurrency(totals.income)} | Pengeluaran ${formatCurrency(totals.expense)} | Sisa ${formatCurrency(totals.remaining)} (${totals.savingsPercent}%)\n`;
+
+    if (format === 'json') {
+      const data = filtered.map((tx) => ({
+        tanggal: new Date(tx.date).toISOString().split('T')[0],
+        deskripsi: tx.description,
+        kategori: tx.category,
+        tipe: tx.type === 'income' ? 'pemasukan' : 'pengeluaran',
+        jumlah: tx.amount,
+        catatan: tx.notes || '',
+      }));
+      return JSON.stringify(data, null, 2);
+    }
+
+    if (format === 'table') {
+      let rows = '| Tanggal | Deskripsi | Kategori | Tipe | Jumlah |\n';
+      rows += '|---------|-----------|----------|------|--------|\n';
+      for (const tx of filtered) {
+        const date = formatDate(new Date(tx.date));
+        const type = tx.type === 'income' ? 'Pemasukan' : 'Pengeluaran';
+        const amount = formatCurrency(tx.amount);
+        rows += `| ${date} | ${tx.description} | ${tx.category} | ${type} | ${amount} |\n`;
+      }
+      return header + '\n' + rows;
+    }
+
+    let rows = '';
+    for (const tx of filtered) {
+      const date = formatDate(new Date(tx.date));
+      const type = tx.type === 'income' ? 'Pemasukan' : 'Pengeluaran';
+      const amount = formatCurrency(tx.amount);
+      const note = tx.notes ? ` (${tx.notes})` : '';
+      rows += `- [${type}] ${tx.description} (${tx.category}): ${amount} | ${date}${note}\n`;
+    }
+    return header + '\n' + rows;
+  };
+
+  const handleCopy = async (format: 'table' | 'text' | 'json') => {
+    try {
+      const text = generateExportText(format);
+      await Clipboard.setStringAsync(text);
+      Alert.alert(t('success'), t('exportCopied'));
+    } catch {
+      Alert.alert(t('error'), t('exportCopyFailed'));
+    }
+    setShowExportModal(false);
+  };
+
   const renderDatePicker = (
     value: Date,
     onChange: (d: Date) => void,
@@ -394,15 +453,19 @@ export default function TransactionsScreen() {
         <Text style={styles.headerTitle}>{t('transactions')}</Text>
         <View style={styles.headerRight}>
           {selectMode ? (
-            <TouchableOpacity onPress={exitSelectMode}>
-              <Text style={styles.cancelText}>{t('cancel')}</Text>
+            <TouchableOpacity style={styles.headerIconBtn} onPress={exitSelectMode}>
+              <Ionicons name="close-circle-outline" size={22} color={colors.textMuted} />
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity onPress={() => setSelectMode(true)}>
-              <Text style={styles.selectText}>{t('selectMode')}</Text>
+            <TouchableOpacity style={styles.headerIconBtn} onPress={() => setSelectMode(true)}>
+              <Ionicons name="checkmark-circle-outline" size={22} color={colors.textMuted} />
             </TouchableOpacity>
           )}
+          <TouchableOpacity style={styles.headerIconBtn} onPress={() => setShowExportModal(true)}>
+            <Ionicons name="copy-outline" size={20} color={colors.textMuted} />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.addButton} onPress={openAdd}>
+            <Ionicons name="add" size={20} color="#fff" />
             <Text style={styles.addButtonText}>{t('add')}</Text>
           </TouchableOpacity>
         </View>
@@ -685,6 +748,53 @@ export default function TransactionsScreen() {
           </View>
         </TouchableOpacity>
       </Modal>
+
+      <Modal visible={showExportModal} transparent animationType="fade">
+        <TouchableOpacity style={styles.modalOverlay} onPress={() => setShowExportModal(false)}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>{t('exportFormat')}</Text>
+
+            <TouchableOpacity
+              style={styles.exportOption}
+              onPress={() => handleCopy('table')}
+            >
+              <Text style={styles.exportOptionTitle}>{t('exportTable')}</Text>
+              <Text style={styles.exportOptionDesc}>
+                Format tabel markdown, cocok untuk paste ke AI
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.exportOption}
+              onPress={() => handleCopy('text')}
+            >
+              <Text style={styles.exportOptionTitle}>{t('exportText')}</Text>
+              <Text style={styles.exportOptionDesc}>
+                Format list terstruktur dengan bullet points
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.exportOption}
+              onPress={() => handleCopy('json')}
+            >
+              <Text style={styles.exportOptionTitle}>{t('exportJson')}</Text>
+              <Text style={styles.exportOptionDesc}>
+                Format JSON untuk AI yang lebih advanced
+              </Text>
+            </TouchableOpacity>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                onPress={() => setShowExportModal(false)}
+                style={styles.modalClearButton}
+              >
+                <Text style={styles.modalClearText}>{t('cancel')}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -705,32 +815,34 @@ const createStyles = (colors: Theme) =>
     headerRight: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: 12,
+      gap: 6,
     },
     headerTitle: {
       fontSize: 26,
       fontWeight: '700',
       color: colors.text,
+      flexShrink: 1,
+    },
+    headerIconBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: colors.backgroundElement,
     },
     addButton: {
+      flexDirection: 'row',
+      alignItems: 'center',
       backgroundColor: colors.primary,
-      paddingHorizontal: 14,
+      paddingHorizontal: 12,
       paddingVertical: 8,
       borderRadius: 8,
+      gap: 4,
     },
     addButtonText: {
       color: '#fff',
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    selectText: {
-      color: colors.primary,
-      fontSize: 14,
-      fontWeight: '600',
-    },
-    cancelText: {
-      color: colors.textMuted,
-      fontSize: 14,
+      fontSize: 13,
       fontWeight: '600',
     },
     filterBar: {
@@ -1050,5 +1162,23 @@ const createStyles = (colors: Theme) =>
     modalApplyText: {
       color: '#fff',
       fontWeight: '600',
+    },
+    exportOption: {
+      backgroundColor: colors.backgroundElement,
+      borderRadius: 12,
+      padding: 16,
+      marginBottom: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+    },
+    exportOptionTitle: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.text,
+      marginBottom: 4,
+    },
+    exportOptionDesc: {
+      fontSize: 12,
+      color: colors.textMuted,
     },
   });

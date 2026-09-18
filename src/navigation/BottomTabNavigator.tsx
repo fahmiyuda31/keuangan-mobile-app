@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { RouteProp } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/hooks/use-theme';
@@ -22,7 +23,7 @@ export function BottomTabNavigator() {
 
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
+      screenOptions={({ route }: { route: RouteProp<TabParamList, keyof TabParamList> }) => ({
         headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.screen,
@@ -42,7 +43,7 @@ export function BottomTabNavigator() {
         tabBarInactiveTintColor: colors.textMuted,
         tabBarLabelStyle: { fontSize: 11, fontWeight: '500', paddingBottom: 2 },
         tabBarItemStyle: { paddingVertical: 2 },
-        tabBarIcon: ({ focused, color, size }) => {
+        tabBarIcon: ({ focused, color, size }: { focused: boolean; color: string; size: number }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
           switch (route.name) {
@@ -59,7 +60,7 @@ export function BottomTabNavigator() {
               iconName = focused ? 'wallet' : 'wallet-outline';
               break;
             case 'AIChat':
-              iconName = focused ? 'sparkles' : 'sparkles-outline';
+              iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
               break;
             case 'Settings':
               iconName = focused ? 'settings' : 'settings-outline';
@@ -134,7 +135,6 @@ export function BottomTabNavigator() {
     </Tab.Navigator>
   );
 }
-
 
 const styles = StyleSheet.create({
   iconPill: {

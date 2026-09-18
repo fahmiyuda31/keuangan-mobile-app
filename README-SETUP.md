@@ -12,7 +12,6 @@ A mobile personal finance app built with React Native and Expo SDK 54. Track exp
 - **Offline Support**: Full offline capability with local SQLite database
 - **Cloud Backup**: Manual Firebase (Firestore) backup/restore with email/password auth (`src/services/firebaseService.ts`)
 - **Login**: App gated behind email/password sign-in (`src/screens/AuthScreen.tsx`)
-- **AI Financial Assistant**: Chat about financial status using current SQLite transaction context
 
 ## Project Structure
 
@@ -26,10 +25,12 @@ keuangan-mobile-app/
 │   ├── navigation/               # React Navigation config (manual, not expo-router routing)
 │   ├── screens/                  # dashboard/, transactions/, categories/, budgets/, Settings
 │   ├── services/
-│   │   ├── dbService.ts          # SQLite CRUD (expo-sqlite) - the active DB layer
-│   │   ├── geminiService.ts      # AI parsing, receipt OCR, and financial chat (Gemini)
+│   │   ├── aiService.ts          # Hybrid AI Router (On-Device + Cloud fallback)
+│   │   ├── onDeviceAiService.ts  # On-Device Gemma 4 E2B offline engine (llama.rn)
+│   │   ├── geminiService.ts      # Cloud AI transaction parsing & chat (Gemini)
 │   │   ├── keyService.ts         # Gemini key lookup (SecureStore -> .env fallback)
-│   ├── store/                    # Zustand stores (in-memory, hydrate from dbService)
+│   │   ├── dbService.ts          # SQLite CRUD (expo-sqlite) - the active DB layer
+│   ├── store/                    # Zustand stores (transactionStore, categoryStore, budgetStore, modelStore)
 │   ├── utils/                    # Utility functions
 │   └── constants/                # App constants
 ├── assets/
@@ -120,7 +121,7 @@ Gotchas:
 
 - `Transaction` is a SQLite reserved keyword — the table name is always quoted as `"Transaction"` in SQL. `Transaction` (interface) and `Transactions` (screen name) are unaffected.
 - Default categories are seeded on first launch (`seedDefaultCategories`).
-- Schema uses a versioned migration framework via `PRAGMA user_version`; migration v1 is the current schema.
+- Schema is created with `CREATE TABLE IF NOT EXISTS` — no migration framework yet.
 
 ### Gemini API Key
 
@@ -130,8 +131,7 @@ Gotchas:
 2. `process.env.EXPO_PUBLIC_GEMINI_API_KEY` — fallback
 3. otherwise unconfigured → AI parsing errors with a "not configured" message
 
-`src/services/geminiService.ts` provides text parsing, receipt OCR, and financial assistant chat
-via the Gemini REST API. Voice input is not implemented.
+`parseTransactionWithAI()` in `src/services/geminiService.ts` does text-only parsing via Gemini REST API. No OCR, no voice, no 9router.
 
 ### Navigation
 
@@ -193,13 +193,12 @@ The `docs/` directory (PRD, IMPLEMENTATION-CHECKLIST, SETUP-SUMMARY, GEMINI-INTE
 - [x] Transaction management (CRUD)
 - [x] AI text parsing (Gemini)
 - [x] Gemini key management (Settings)
-- [x] Complete Category management (CRUD)
-- [x] Complete Budget management
-- [x] Data sync and import/export
-- [x] Analytics and reporting
-- [x] Internationalization (i18n)
-- [x] Dark mode support
-- [x] AI financial assistant chat
+- [ ] Complete Category management (CRUD)
+- [ ] Complete Budget management
+- [ ] Data sync and import/export
+- [ ] Analytics and reporting
+- [ ] Internationalization (i18n)
+- [ ] Dark mode support
 
 ## Known Issues
 
@@ -209,4 +208,4 @@ The `docs/` directory (PRD, IMPLEMENTATION-CHECKLIST, SETUP-SUMMARY, GEMINI-INTE
 ---
 
 **Version**: 1.0.0
-**Last Updated**: 2026-09-18
+**Last Updated**: 2026-08-05
