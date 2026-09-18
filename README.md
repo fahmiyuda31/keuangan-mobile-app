@@ -173,7 +173,20 @@ npm run format:check
 
 ## Documentation
 
-The `docs/` directory (PRD, IMPLEMENTATION-CHECKLIST, SETUP-SUMMARY, GEMINI-INTEGRATION-GUIDE) is maintained to match the current SQLite-based code. **This file remains the primary setup/architecture reference; trust code first.**
+README ini adalah titik masuk utama untuk setup dan arsitektur. Detail proyek
+tersedia di direktori [`docs/`](docs/):
+
+| Dokumen | Isi |
+| --- | --- |
+| [Project Info](docs/PROJECT-INFO.md) | Arsitektur, ERD, alur aplikasi, struktur proyek, dan status rilis |
+| [PRD Keuangan Mobile App](docs/PRD-Keuangan-Mobile-App.md) | Ruang lingkup produk, fitur, model data, dan batasan |
+| [Implementation Checklist](docs/IMPLEMENTATION-CHECKLIST.md) | Status implementasi fitur dan tooling |
+| [Project Setup Completion](docs/PROJECT-SETUP-COMPLETION.md) | Detail stack dan status konfigurasi proyek |
+| [Setup Summary](docs/SETUP-SUMMARY.md) | Ringkasan setup, database, navigasi, dan verifikasi |
+| [Gemini Integration Guide](docs/GEMINI-INTEGRATION-GUIDE.md) | Konfigurasi API key, parsing transaksi, OCR, dan AI chat |
+
+Dokumentasi dipelihara agar sesuai dengan kode pada branch `main`. Jika terdapat
+perbedaan, jadikan source code sebagai sumber kebenaran terakhir.
 
 - [Expo SDK 54 Docs](https://docs.expo.dev/versions/v54.0.0/)
 - [expo-sqlite](https://docs.expo.dev/versions/v54.0.0/sdk/sqlite/)
