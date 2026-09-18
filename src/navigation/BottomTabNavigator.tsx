@@ -60,7 +60,7 @@ export function BottomTabNavigator() {
               iconName = focused ? 'wallet' : 'wallet-outline';
               break;
             case 'AIChat':
-              iconName = focused ? 'sparkles' : 'sparkles-outline';
+              iconName = focused ? 'chatbubbles' : 'chatbubbles-outline';
               break;
             case 'Settings':
               iconName = focused ? 'settings' : 'settings-outline';

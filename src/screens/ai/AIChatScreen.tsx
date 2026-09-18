@@ -195,7 +195,7 @@ export default function AIChatScreen() {
       >
         {!isUser && (
           <View style={[styles.avatar, { backgroundColor: colors.primary }]}>
-            <Ionicons name="sparkles" size={16} color="#FFFFFF" />
+            <Ionicons name="chatbubbles" size={16} color="#FFFFFF" />
           </View>
         )}
         <View
@@ -224,7 +224,7 @@ export default function AIChatScreen() {
       >
         <View style={styles.headerTitleRow}>
           <View style={[styles.headerIcon, { backgroundColor: `${colors.primary}15` }]}>
-            <Ionicons name="sparkles" size={20} color={colors.primary} />
+            <Ionicons name="chatbubbles" size={20} color={colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>

@@ -17,7 +17,7 @@ const Card: React.FC<CardProps> = ({
   title,
   titleStyle,
   padding = 18,
-  elevation = 1,
+  elevation = 0,
 }) => {
   const colors = useTheme();
   return (
@@ -28,7 +28,7 @@ const Card: React.FC<CardProps> = ({
           backgroundColor: colors.card,
           padding,
           elevation,
-          shadowColor: colors.text,
+          borderColor: colors.border,
         },
         style,
       ]}
@@ -44,12 +44,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     marginVertical: 8,
     marginHorizontal: 16,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
+    borderWidth: 1,
   },
   title: {
     fontSize: 15,
